@@ -105,19 +105,35 @@ const PlaceOrder = () => {
         paymentMethod: method,
       };
 
-      // Place the order
-      const response = await axios.post(
-        `${backend_url}/api/order/place`,
-        orderData,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      if (method === "stripe") {
+        // Call backend to create Stripe session
+        const response = await axios.post(
+          `${backend_url}/api/order/stripe`,
+          orderData,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
 
-      if (response.data.success) {
-        toast.success("Đặt hàng thành công!");
-        setCartItems({});
-        navigate("/orders");
-      } else {
-        toast.error(response.data.message);
+        if (response.data.success) {
+          // Redirect to Stripe checkout page
+          window.location.replace(response.data.session_url);
+        } else {
+          toast.error(response.data.message);
+        }
+      } else if (method === "cod") {
+        // Place order for COD
+        const response = await axios.post(
+          `${backend_url}/api/order/place`,
+          orderData,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+
+        if (response.data.success) {
+          toast.success("Đặt hàng thành công!");
+          setCartItems({});
+          navigate("/orders");
+        } else {
+          toast.error(response.data.message);
+        }
       }
     } catch (error) {
       console.error("Order submission failed:", error);
@@ -173,8 +189,7 @@ const PlaceOrder = () => {
               className="ring-1 ring-slate-900/15 p-1 pl-3 rounded-sm bg-primary outline-none"
               required
             />
-
-            <CartTotal/>
+            <CartTotal />
             {/* Payment Method */}
             <div className="my-6">
               <h3 className="bold-20 mb-5">

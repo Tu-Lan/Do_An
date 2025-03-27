@@ -255,20 +255,20 @@ const placeOrderStripe = async (req, res) => {
         product_data: {
           name: item.name,
         },
-        unit_amount: Math.round(item.price * 100), // Convert price to VND (in cents)
+        unit_amount: Math.round(item.price), // Convert price to VND (in cents)
       },
       quantity: item.quantity,
     }));
 
     // Add delivery charges to the line items
-    const deliveryChargesVND = 10000; // Delivery charges in VND
+    const deliveryChargesVND = 1000; // Delivery charges in VND
     line_items.push({
       price_data: {
         currency: 'vnd',
         product_data: {
           name: "Delivery charges",
         },
-        unit_amount: deliveryChargesVND * 100, // Convert to cents
+        unit_amount: deliveryChargesVND, // Convert to cents
       },
       quantity: 1,
     });

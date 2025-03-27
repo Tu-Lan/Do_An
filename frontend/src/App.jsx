@@ -15,6 +15,7 @@ import ProtectedRoute from "./components/ProtectedRoute"
 import ShopContextProvider from "./context/ShopContext"
 import OrderDetail from "./pages/OrderDetail"
 import AddressManager from "./pages/AddressManager"
+import UserSettings from "./pages/UserSetting"
 
 const App = () => {
   return (
@@ -32,6 +33,7 @@ const App = () => {
           <Route path="/place-order" element={<PlaceOrder />} />
           <Route path="/orders" element={<Orders />} />
           <Route path="/verify" element={<Verify />} />
+          <Route path="/usersetting" element={<UserSettings />} />
           <Route path="/product/:id" element={<ProductDetail />} />
           <Route
             path="/edit-profile"
