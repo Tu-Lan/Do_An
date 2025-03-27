@@ -115,7 +115,7 @@ const Header = () => {
                       Đơn hàng
                     </li>
                     <li onClick={() => navigate("/usersetting")} className="p-2 hover:bg-gray-100 cursor-pointer">
-                      Setting
+                      Cài đặt
                     </li>
                     <li onClick={logout} className="p-2 hover:bg-red-100 text-red-500 cursor-pointer">
                       Đăng xuất
