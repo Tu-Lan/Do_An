@@ -8,7 +8,18 @@ const userSchema = new mongoose.Schema({
   birth: { type: Date, required: true },
   image: { type: String, default: 'https://via.placeholder.com/150' },
   cartData: { type: Object, default: {} },
+  addresses: [{  // Thêm trường địa chỉ người dùng
+    firstName: String,
+    lastName: String,
+    street: String,
+    city: String,
+    state: String,
+    zipcode: String,
+    country: String,
+    phone: String,
+  }],
 }, { minimize: false });
+
 
 const User = mongoose.models.User || mongoose.model('User', userSchema);  // Đảm bảo đã đăng ký đúng tên
 

@@ -310,6 +310,73 @@ const adminUpdateUser = async (req, res) => {
   }
 };
 
+// Thêm địa chỉ
+const addAddress = async (req, res) => {
+  const userId = req.user.id;
+  const address = req.body;
 
+  try {
+    const user = await userModel.findByIdAndUpdate(
+      userId,
+      { $push: { addresses: address } },
+      { new: true }
+    );
+    res.status(200).json({ success: true, addresses: user.addresses });
+  } catch (error) {
+    res.status(500).json({ success: false, message: "Lỗi khi thêm địa chỉ." });
+  }
+};
 
-export { adminUpdateUser, deleteUser, handleAdminLogin, handleUserRegister, handleUserLogin, getAllUsers, getUserById, getCurrentUserProfile, updateCurrentUserProfile };
+// Cập nhật địa chỉ
+const updateAddress = async (req, res) => {
+  const userId = req.user.id;
+  const { addressId } = req.params;
+  const updatedAddress = req.body;
+
+  try {
+    const user = await userModel.findOneAndUpdate(
+      { _id: userId, "addresses._id": addressId },
+      { $set: { "addresses.$": updatedAddress } },
+      { new: true }
+    );
+    res.status(200).json({ success: true, addresses: user.addresses });
+  } catch (error) {
+    res.status(500).json({ success: false, message: "Lỗi khi cập nhật địa chỉ." });
+  }
+};
+
+// Xóa địa chỉ
+const removeAddress = async (req, res) => {
+  const userId = req.user.id;
+  const { addressId } = req.params;
+
+  try {
+    const user = await userModel.findByIdAndUpdate(
+      userId,
+      { $pull: { addresses: { _id: addressId } } },
+      { new: true }
+    );
+    res.status(200).json({ success: true, addresses: user.addresses });
+  } catch (error) {
+    res.status(500).json({ success: false, message: "Lỗi khi xóa địa chỉ." });
+  }
+};
+
+// Lấy tất cả địa chỉ của người dùng
+const getAddresses = async (req, res) => {
+  const userId = req.user.id;
+
+  try {
+    const user = await userModel.findById(userId).select('addresses');
+    res.status(200).json({ success: true, addresses: user.addresses });
+  } catch (error) {
+    res.status(500).json({ success: false, message: "Lỗi khi lấy địa chỉ." });
+  }
+};
+
+export { adminUpdateUser, deleteUser, handleAdminLogin, handleUserRegister, handleUserLogin, getAllUsers, getUserById, getCurrentUserProfile, 
+  updateCurrentUserProfile, addAddress,
+  removeAddress,
+  updateAddress,
+  getAddresses,
+};

@@ -8,7 +8,11 @@ import {
   updateCurrentUserProfile,
   getUserById,
   adminUpdateUser,
-  deleteUser
+  deleteUser,
+  addAddress,
+  updateAddress,
+  getAddresses,
+  removeAddress
 } from '../controllers/userController.js';
 
 import authUser from '../middleware/auth.js';
@@ -34,6 +38,14 @@ userRouter.get('/profile', authUser,  getCurrentUserProfile);
 userRouter.put('/profile', authUser, upload.single('image'), updateCurrentUserProfile);
 
 userRouter.put('/update/:id', adminAuth,upload.single('image'), adminUpdateUser);
+userRouter.get("/addresses", authUser, getAddresses);
+
+userRouter.post("/address", authUser, addAddress);
+
+userRouter.put("/address/:addressId", authUser, updateAddress);
+
+userRouter.delete("/address/:addressId", authUser, removeAddress);
+
 
 
 export default userRouter;

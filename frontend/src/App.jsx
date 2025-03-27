@@ -14,6 +14,7 @@ import EditUser from "./pages/EditUser"
 import ProtectedRoute from "./components/ProtectedRoute"
 import ShopContextProvider from "./context/ShopContext"
 import OrderDetail from "./pages/OrderDetail"
+import AddressManager from "./pages/AddressManager"
 
 const App = () => {
   return (
@@ -37,6 +38,14 @@ const App = () => {
             element={
               <ProtectedRoute>
                 <EditUser />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/edit-profile/address"
+            element={
+              <ProtectedRoute>
+                <AddressManager />
               </ProtectedRoute>
             }
           />
