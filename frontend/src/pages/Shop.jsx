@@ -78,6 +78,10 @@ const Shop = () => {
     setCurrentPage(1);
   }, [category, sortType, books, search]);
 
+  // useEffect(() => {
+  //   getProductsData(); // Gọi API lấy danh sách sản phẩm mà không cần kiểm tra token
+  // }, []);
+
   const getPaginatedBooks = () => {
     const startIndex = (currentPage - 1) * itemsPerPage;
     const endIndex = startIndex + itemsPerPage;

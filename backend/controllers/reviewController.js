@@ -58,11 +58,40 @@ export const deleteReview = async (req, res) => {
       return res.status(403).json({ success: false, message: 'Bạn không có quyền xóa đánh giá này.' });
     }
 
-    await review.remove();
+    await Review.deleteOne({ _id: reviewId }); // Use deleteOne instead of remove
 
     res.status(200).json({ success: true, message: 'Đánh giá đã được xóa.' });
   } catch (error) {
     console.error('Error deleting review:', error);
+    res.status(500).json({ success: false, message: 'Lỗi server.', error: error.message });
+  }
+};
+
+export const updateReview = async (req, res) => {
+  try {
+    const { reviewId } = req.params;
+    const { rating, comment } = req.body;
+    const userId = req.user.id;
+
+    const review = await Review.findById(reviewId);
+
+    if (!review) {
+      return res.status(404).json({ success: false, message: 'Không tìm thấy đánh giá.' });
+    }
+
+    if (review.userId.toString() !== userId) {
+      return res.status(403).json({ success: false, message: 'Bạn không có quyền chỉnh sửa đánh giá này.' });
+    }
+
+    // Update review fields
+    if (rating) review.rating = rating;
+    if (comment) review.comment = comment;
+
+    await review.save();
+
+    res.status(200).json({ success: true, message: 'Đánh giá đã được cập nhật.', review });
+  } catch (error) {
+    console.error('Error updating review:', error);
     res.status(500).json({ success: false, message: 'Lỗi server.', error: error.message });
   }
 };

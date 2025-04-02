@@ -62,6 +62,14 @@ const Login = () => {
     }
   };
 
+  const logout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("userId");
+    setToken(null);
+    setUserId(null);
+    navigate("/login");
+  };
+
   useEffect(() => {
     if (token) {
       navigate("/"); // Nếu đã đăng nhập, điều hướng về trang chính

@@ -374,9 +374,67 @@ const getAddresses = async (req, res) => {
   }
 };
 
+const getUserStats = async (req, res) => {
+  try {
+    const { startDate, endDate } = req.query;
+
+    if (!startDate || !endDate) {
+      return res.status(400).json({ success: false, message: "Start date and end date are required." });
+    }
+
+    const stats = await userModel.aggregate([
+      {
+        $match: {
+          createdAt: { $gte: new Date(startDate), $lte: new Date(endDate) },
+        },
+      },
+      {
+        $group: {
+          _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } },
+          count: { $sum: 1 },
+        },
+      },
+      {
+        $project: {
+          date: "$_id",
+          count: 1,
+          _id: 0,
+        },
+      },
+    ]);
+
+    res.status(200).json({ success: true, stats });
+  } catch (error) {
+    console.error("Error fetching user stats:", error);
+    res.status(500).json({ success: false, message: "Internal server error." });
+  }
+};
+
+// Lấy danh sách người dùng đăng ký trong khoảng thời gian
+const getRegisteredUsers = async (req, res) => {
+  try {
+    const { startDate, endDate } = req.query;
+
+    if (!startDate || !endDate) {
+      return res.status(400).json({ success: false, message: "Start date and end date are required." });
+    }
+
+    const users = await userModel.find({
+      createdAt: { $gte: new Date(startDate), $lte: new Date(endDate) },
+    }).select('-password');
+
+    res.status(200).json({ success: true, users });
+  } catch (error) {
+    console.error("Error fetching registered users:", error);
+    res.status(500).json({ success: false, message: "Internal server error." });
+  }
+};
+
 export { adminUpdateUser, deleteUser, handleAdminLogin, handleUserRegister, handleUserLogin, getAllUsers, getUserById, getCurrentUserProfile, 
   updateCurrentUserProfile, addAddress,
   removeAddress,
   updateAddress,
   getAddresses,
+  getUserStats,
+  getRegisteredUsers,
 };

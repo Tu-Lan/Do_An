@@ -17,6 +17,10 @@ const ProductDetail = () => {
   const [reviews, setReviews] = useState([]);
   const [rating, setRating] = useState(0);
   const [comment, setComment] = useState("");
+  const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
+  const userId = localStorage.getItem("userId"); // Lấy userId từ localStorage
+  const [editMode, setEditMode] = useState(false); // Thêm trạng thái để kiểm tra chế độ sửa
+  const [editReviewId, setEditReviewId] = useState(null); // Lưu ID của đánh giá đang sửa
 
   useEffect(() => {
     const foundProduct = books.find((book) => book._id === id);
@@ -61,6 +65,13 @@ const ProductDetail = () => {
     setQuantityCart((prev) => Math.max(1, prev - 1));
   };
 
+  const handleEditClick = (review) => {
+    setEditMode(true); // Bật chế độ sửa
+    setEditReviewId(review._id); // Lưu ID của đánh giá đang sửa
+    setRating(review.rating); // Điền xếp hạng vào form
+    setComment(review.comment); // Điền bình luận vào form
+  };
+
   const handleReviewSubmit = async (e) => {
     e.preventDefault();
     if (!rating || !comment) {
@@ -69,27 +80,104 @@ const ProductDetail = () => {
     }
 
     try {
-      const response = await axios.post(
-        `${backend_url}/api/review/add`,
-        { productId: product._id, rating, comment },
+      if (editMode) {
+        // Nếu đang ở chế độ sửa, gọi API cập nhật đánh giá
+        const response = await axios.put(
+          `${backend_url}/api/review/update/${editReviewId}`,
+          { rating, comment },
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+
+        if (response.data.success) {
+          toast.success("Đánh giá đã được cập nhật.");
+          setEditMode(false); // Tắt chế độ sửa
+          setEditReviewId(null); // Xóa ID của đánh giá đang sửa
+        } else {
+          toast.error("Không thể cập nhật đánh giá.");
+        }
+      } else {
+        // Nếu không ở chế độ sửa, gọi API thêm đánh giá mới
+        const response = await axios.post(
+          `${backend_url}/api/review/add`,
+          { productId: product._id, rating, comment },
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+
+        if (response.data.success) {
+          toast.success("Đánh giá đã được thêm.");
+        } else {
+          toast.error("Không thể thêm đánh giá.");
+        }
+      }
+
+      setRating(0); // Reset xếp hạng
+      setComment(""); // Reset bình luận
+      fetchReviews(product._id); // Tải lại danh sách đánh giá
+    } catch (error) {
+      console.error("Error submitting review:", error);
+      toast.error("Lỗi khi gửi đánh giá.");
+    }
+  };
+
+  const handleReviewUpdate = async (reviewId, updatedRating, updatedComment) => {
+    try {
+      const response = await axios.put(
+        `${backend_url}/api/review/update/${reviewId}`,
+        { rating: updatedRating, comment: updatedComment },
         { headers: { Authorization: `Bearer ${token}` } }
       );
-
       if (response.data.success) {
-        toast.success("Đánh giá đã được thêm.");
-        setRating(0);
-        setComment("");
+        toast.success("Đánh giá đã được cập nhật.");
         fetchReviews(product._id);
       } else {
-        toast.error("Không thể thêm đánh giá.");
+        toast.error("Không thể cập nhật đánh giá.");
       }
     } catch (error) {
-      console.error("Error adding review:", error);
-      toast.error("Lỗi khi thêm đánh giá.");
+      console.error("Error updating review:", error);
+      toast.error("Lỗi khi cập nhật đánh giá.");
+    }
+  };
+
+  const handleReviewDelete = async (reviewId) => {
+    try {
+      const response = await axios.delete(
+        `${backend_url}/api/review/delete/${reviewId}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      if (response.data.success) {
+        toast.success("Đánh giá đã được xóa.");
+        fetchReviews(product._id);
+      } else {
+        toast.error("Không thể xóa đánh giá.");
+      }
+    } catch (error) {
+      console.error("Error deleting review:", error);
+      toast.error("Lỗi khi xóa đánh giá.");
     }
   };
 
   if (!product) return <div>Đang tải...</div>;
+
+  const shortDescription = product.description.length > 100
+    ? product.description.substring(0, 100) + "..."
+    : product.description;
+
+  // Tính toán thông tin đánh giá
+  const totalReviews = reviews.length;
+  const averageRating = totalReviews > 0
+    ? (reviews.reduce((sum, review) => sum + review.rating, 0) / totalReviews).toFixed(1)
+    : 0;
+
+  // Tính tỷ lệ phần trăm cho từng mức sao
+  const ratingCounts = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 };
+  reviews.forEach((review) => {
+    ratingCounts[review.rating] += 1;
+  });
+
+  const ratingPercentages = {};
+  for (let i = 1; i <= 5; i++) {
+    ratingPercentages[i] = totalReviews > 0 ? ((ratingCounts[i] / totalReviews) * 100).toFixed(0) : 0;
+  }
 
   return (
     <section className="max-padd-container">
@@ -100,10 +188,9 @@ const ProductDetail = () => {
             <img
               src={product.image}
               alt={product.name}
-              className="max-w-full h-auto rounded-lg shadow-lg"
+              className="w-[300px] h-[400px] object-contain rounded-lg shadow-lg"
             />
             <div className="flex gap-3">
-              {/* Small image thumbnails */}
               <img
                 src={product.image}
                 alt="thumbnail"
@@ -123,10 +210,7 @@ const ProductDetail = () => {
           </div>
           <article className="ml-10 w-1/2">
             <h4 className="text-lg font-bold">Tên sách: {product.name}</h4>
-            <p className="text-sm my-2">Mô tả: {product.description}</p>
             <p className="text-sm my-2">Tác giả: {product.author}</p>
-
-            {/* Nhà sản xuất */}
             <p className="text-sm my-2 font-semibold">Nhà sản xuất: {product.publisher}</p>
 
             <div className="flex gap-1">
@@ -136,27 +220,35 @@ const ProductDetail = () => {
             <p className="text-sm my-2">
               {product.quantity > 0 ? `Còn: ${product.quantity}` : "Hết hàng"}
             </p>
+            <p className="text-sm my-2">
+              Mô tả: {isDescriptionExpanded ? product.description : shortDescription}
+              {product.description.length > 100 && (
+                <button
+                  onClick={() => setIsDescriptionExpanded(!isDescriptionExpanded)}
+                  className="text-blue-500 ml-2 underline"
+                >
+                  {isDescriptionExpanded ? "Thu gọn" : "Xem thêm"}
+                </button>
+              )}
+            </p>
 
-            {/* Quantity Selector */}
-            <div className="flex items-center ring-1 ring-slate-900/5 rounded-full overflow-hidden bg-primary">
-              <button
-                onClick={decreaseQuantityCart}
-                className="bg-white p-1.5 shadow-md rounded-full"
-              >
-                <FaMinus className="text-xs" />
-              </button>
-              <p className="px-2">{quantityCart}</p>
-              <button
-                onClick={increaseQuantityCart}
-                disabled={quantityCart >= product.quantity}
-                className={`bg-white p-1.5 shadow-md rounded-full ${quantityCart >= product.quantity ? "opacity-50 cursor-not-allowed" : ""}`}
-              >
-                <FaPlus className="text-xs" />
-              </button>
-            </div>
-
-            {/* Action Buttons */}
-            <div className="mt-4">
+            <div className="flex items-center gap-4 mt-4">
+              <div className="flex items-center ring-1 ring-slate-900/5 rounded-full overflow-hidden bg-primary">
+                <button
+                  onClick={decreaseQuantityCart}
+                  className="bg-white p-1.5 shadow-md rounded-full"
+                >
+                  <FaMinus className="text-xs" />
+                </button>
+                <p className="px-2">{quantityCart}</p>
+                <button
+                  onClick={increaseQuantityCart}
+                  disabled={quantityCart >= product.quantity}
+                  className={`bg-white p-1.5 shadow-md rounded-full ${quantityCart >= product.quantity ? "opacity-50 cursor-not-allowed" : ""}`}
+                >
+                  <FaPlus className="text-xs" />
+                </button>
+              </div>
               <button
                 onClick={handleAddToCart}
                 disabled={product.quantity === 0}
@@ -169,12 +261,10 @@ const ProductDetail = () => {
               </button>
             </div>
 
-            {/* Phone numbers */}
             <div className="mt-4 text-sm">
               <p>Gọi đặt hàng: <span className="font-semibold">0879817410</span> hoặc <span className="font-semibold">0839999999</span></p>
             </div>
 
-            {/* Promotion */}
             <div className="mt-4 text-sm">
               <p>Thông tin & Khuyến mãi:</p>
               <ul className="list-disc pl-5">
@@ -214,22 +304,79 @@ const ProductDetail = () => {
               type="submit"
               className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
             >
-              Gửi đánh giá
+              {editMode ? "Cập nhật đánh giá" : "Gửi đánh giá"} {/* Thay đổi nút dựa trên chế độ */}
             </button>
           </form>
         </div>
 
-        {/* Danh sách đánh giá */}
+        {/* Tổng quan đánh giá và danh sách đánh giá */}
         <div className="mt-10">
           <h3 className="text-2xl font-bold mb-4">Đánh giá</h3>
+
+          {/* Tổng quan đánh giá */}
+          <div className="bg-white p-4 rounded-lg shadow-sm mb-6">
+            <h4 className="text-lg font-semibold mb-2">Đánh giá sản phẩm</h4>
+            <div className="flex items-center gap-4">
+              <div className="text-center">
+                <p className="text-3xl font-bold">{averageRating}/5</p>
+                <Rating
+                  count={5}
+                  size={20}
+                  value={parseFloat(averageRating)}
+                  edit={false}
+                  activeColor="#ffd700"
+                />
+                <p className="text-sm text-gray-500">({totalReviews} đánh giá)</p>
+              </div>
+              <div className="flex-1">
+                {[5, 4, 3, 2, 1].map((star) => (
+                  <div key={star} className="flex items-center gap-2">
+                    <span className="w-12 text-sm">{star} sao</span>
+                    <div className="flex-1 h-2 bg-gray-200 rounded">
+                      <div
+                        className="h-2 bg-yellow-400 rounded"
+                        style={{ width: `${ratingPercentages[star]}%` }}
+                      />
+                    </div>
+                    <span className="w-12 text-sm text-right">{ratingPercentages[star]}%</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Danh sách đánh giá */}
           {reviews.length === 0 ? (
             <p>Chưa có đánh giá nào.</p>
           ) : (
             reviews.map((review) => (
               <div key={review._id} className="mb-4">
-                <p className="font-semibold">{review.userId.name}</p>
-                <p>Xếp hạng: {review.rating}</p>
+                <p className="font-semibold">{review.userId?.name || "Ẩn danh"}</p>
+                <Rating
+                  count={5}
+                  size={16}
+                  value={review.rating}
+                  edit={false}
+                  activeColor="#ffd700"
+                />
                 <p>{review.comment}</p>
+                {/* Hiển thị nút Sửa và Xóa nếu userId của đánh giá khớp với user hiện tại */}
+                {review.userId?._id === userId && (
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => handleEditClick(review)} // Khi nhấn "Sửa", điền dữ liệu vào form
+                      className="text-blue-500"
+                    >
+                      Sửa
+                    </button>
+                    <button
+                      onClick={() => handleReviewDelete(review._id)}
+                      className="text-red-500"
+                    >
+                      Xóa
+                    </button>
+                  </div>
+                )}
               </div>
             ))
           )}

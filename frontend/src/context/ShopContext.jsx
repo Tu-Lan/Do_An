@@ -21,9 +21,42 @@ const ShopContextProvider = (props) => {
   const [userId, setUserId] = useState(localStorage.getItem("userId") || "");
   const [cartItems, setCartItems] = useState(() => {
     const savedCart = localStorage.getItem("cartItems");
-    console.log("Loaded cartItems from localStorage:", savedCart);
-    return savedCart ? JSON.parse(savedCart) : {};
+    return savedCart ? JSON.parse(savedCart) : {}; // Load cart from localStorage if available
   });
+
+  useEffect(() => {
+    const savedCart = localStorage.getItem("cartItems");
+    if (savedCart) {
+      setCartItems(JSON.parse(savedCart)); // Ensure cartItems is reloaded on app initialization
+    }
+  }, []);
+
+  useEffect(() => {
+    localStorage.setItem("cartItems", JSON.stringify(cartItems)); // Save cartItems to localStorage on change
+  }, [cartItems]);
+
+  useEffect(() => {
+    const axiosInstance = axios.create();
+
+    axiosInstance.interceptors.response.use(
+      (response) => response,
+      (error) => {
+        if (error.response?.status === 401) {
+          toast.error("Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.");
+          localStorage.removeItem("token");
+          localStorage.removeItem("userId");
+          setToken(null);
+          setUserId(null);
+          navigate("/login");
+        }
+        return Promise.reject(error);
+      }
+    );
+
+    return () => {
+      axiosInstance.interceptors.response.eject();
+    };
+  }, [navigate, setToken, setUserId]);
 
   const getProductsData = async () => {
     try {
@@ -100,7 +133,8 @@ const ShopContextProvider = (props) => {
   // Lấy giỏ hàng của người dùng từ backend
   const getUserCart = async () => {
     if (!token) {
-      setCartItems({}); // Nếu không có token, set giỏ hàng rỗng
+      const savedCart = localStorage.getItem("cartItems");
+      setCartItems(savedCart ? JSON.parse(savedCart) : {}); // Load cart from localStorage if not logged in
       return;
     }
 
@@ -131,7 +165,7 @@ const ShopContextProvider = (props) => {
     try {
       const response = await axios.post(
         `${backend_url}/api/cart/add`,
-        { itemId, quantity:quantityCart },
+        { itemId, quantity: quantityCart },
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
@@ -153,19 +187,13 @@ const ShopContextProvider = (props) => {
 
 
 
-  // useEffect(() => {
-  //   if (token && userId) {
-  //     // getUserCart();
-  //     getProductsData();
-  //     getCategoriesData();
-  //   }
-  // }, [token, userId]);
   useEffect(() => {
     if (token && userId) {
-      getUserCart();
+      // getUserCart();
+      
+      getCategoriesData();
     }
     getProductsData();
-    getCategoriesData();
   }, [token, userId]);
 
 
@@ -178,6 +206,15 @@ const ShopContextProvider = (props) => {
       fetchUserProfile();
     }
   }, [backend_url]);
+
+  useEffect(() => {
+    const savedCart = localStorage.getItem("cartItems");
+    if (savedCart) {
+      setCartItems(JSON.parse(savedCart)); // Load cart from localStorage
+    } else if (token) {
+      getUserCart(); // Load cart from backend if logged in
+    }
+  }, [token]);
 
   // Tính tổng số lượng sản phẩm trong giỏ hàng
   const getCartCount = () => {
@@ -195,36 +232,15 @@ const ShopContextProvider = (props) => {
     }, 0);
   };
 
-  // const updateQuantityCart = async (itemId, newQuantityCart) => {
-  //   if (!token) {
-  //     toast.error("Bạn chưa đăng nhập.");
-  //     return;
-  //   }
-
-  //   try {
-  //     const response = await axios.post(
-  //       `${backend_url}/api/cart/update`,
-  //       { itemId, quantity: newQuantityCart },
-  //       { headers: { Authorization: `Bearer ${token}` } }
-  //     );
-
-  //     if (response.data.success) {
-  //       setCartItems(prevItems => ({
-  //         ...prevItems,
-  //         [itemId]: newQuantityCart
-  //       })); // Cập nhật giỏ hàng với dữ liệu từ backend
-  //       toast.success("Giỏ hàng đã được cập nhật.");
-  //     } else {
-  //       toast.error(response.data.message);
-  //     }
-  //   } catch (error) {
-  //     console.error("Error updating cart:", error);
-  //     toast.error(error.response?.data?.message || "Đã xảy ra lỗi khi cập nhật giỏ hàng.");
-  //   }
-  // }
   const updateQuantityCart = async (itemId, newQuantity) => {
     if (!token) {
-      toast.error("Bạn chưa đăng nhập.");
+      // Update cart in localStorage for guest users
+      setCartItems((prevItems) => {
+        const updatedCart = { ...prevItems, [itemId]: newQuantity };
+        if (newQuantity === 0) delete updatedCart[itemId]; // Remove item if quantity is 0
+        localStorage.setItem("cartItems", JSON.stringify(updatedCart));
+        return updatedCart;
+      });
       return;
     }
 
@@ -238,10 +254,10 @@ const ShopContextProvider = (props) => {
       if (response.data.success) {
         setCartItems((prevItems) => {
           const updatedCart = { ...prevItems, [itemId]: newQuantity };
-          localStorage.setItem("cartItems", JSON.stringify(updatedCart)); // Lưu vào localStorage
+          if (newQuantity === 0) delete updatedCart[itemId];
+          localStorage.setItem("cartItems", JSON.stringify(updatedCart)); // Save to localStorage
           return updatedCart;
         });
-
         toast.success("Đã cập nhật giỏ hàng thành công.");
       } else {
         toast.error(response.data.message);

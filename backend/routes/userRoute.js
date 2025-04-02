@@ -12,7 +12,9 @@ import {
   addAddress,
   updateAddress,
   getAddresses,
-  removeAddress
+  removeAddress,
+  getUserStats,
+  getRegisteredUsers
 } from '../controllers/userController.js';
 
 import authUser from '../middleware/auth.js';
@@ -46,6 +48,7 @@ userRouter.put("/address/:addressId", authUser, updateAddress);
 
 userRouter.delete("/address/:addressId", authUser, removeAddress);
 
-
+userRouter.get("/stats", adminAuth, getUserStats);
+userRouter.get('/registered-users', adminAuth, getRegisteredUsers);
 
 export default userRouter;

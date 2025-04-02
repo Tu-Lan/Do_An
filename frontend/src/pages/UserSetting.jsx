@@ -161,7 +161,9 @@ const AddressManager = () => {
     firstName: "", lastName: "", phone: "", street: "", city: "", state: "", zipcode: "", country: "",
   });
   const [editingAddressId, setEditingAddressId] = useState(null);
-  const [mapCenter] = useState({ lat: 21.0285, lon: 105.8542 });
+  const [mapCenter, setMapCenter] = useState({ lat: 21.0285, lon: 105.8542 });
+  // const [mapCenter] = useState({ lat: 21.0285, lon: 105.8542 });
+  const [suggestions, setSuggestions] = useState([]);
   const [searchInput, setSearchInput] = useState("");
   const mapElement = useRef(null);
   const mapInstance = useRef(null);
@@ -212,6 +214,27 @@ const AddressManager = () => {
       });
     }
   }, [TOMTOM_API_KEY]);
+  const handleSearchChange = async (e) => {
+    const query = e.target.value;
+    setSearchInput(query);
+    if (query.length > 2) {
+      const response = await axios.get(`https://api.tomtom.com/search/2/search/${query}.json?key=${TOMTOM_API_KEY}`);
+      setSuggestions(response.data.results.map(res => ({
+        address: res.address.freeformAddress,
+        position: res.position
+      })));
+    } else {
+      setSuggestions([]);
+    }
+  };
+
+  const handleSelectSuggestion = (suggestion) => {
+    setSearchInput(suggestion.address);
+    setMapCenter({ lat: suggestion.position.lat, lon: suggestion.position.lon });
+    mapInstance.current.setCenter([suggestion.position.lon, suggestion.position.lat]);
+    markerRef.current.setLngLat([suggestion.position.lon, suggestion.position.lat]);
+    setSuggestions([]);
+  };
 
   const onChangeHandler = (e) => {
     const { name, value } = e.target;
@@ -309,6 +332,29 @@ const AddressManager = () => {
             required
             className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors duration-200"
           />
+        </div>
+        <div className="space-y-2 relative"> {/* Thêm relative để làm tham chiếu cho absolute */}
+          <label className="block text-sm font-medium text-gray-700">Tìm kiếm địa chỉ</label>
+          <input
+            type="text"
+            value={searchInput}
+            onChange={handleSearchChange}
+            placeholder="Tìm kiếm địa chỉ..."
+            className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors duration-200"
+          />
+          {suggestions.length > 0 && (
+            <ul className="absolute w-full bg-white border border-gray-300 rounded-lg shadow-lg mt-1 max-h-40 overflow-y-auto z-10"> {/* Thêm z-index */}
+              {suggestions.map((sug, index) => (
+                <li
+                  key={index}
+                  onClick={() => handleSelectSuggestion(sug)}
+                  className="px-4 py-2 hover:bg-gray-200 cursor-pointer"
+                >
+                  {sug.address}
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
         <div className="space-y-2">
           <label className="block text-sm font-medium text-gray-700">Bản đồ</label>

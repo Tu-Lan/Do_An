@@ -18,6 +18,8 @@ import EditUser from "./components/EditUserAdmin";
 import AddUser from "./pages/AddUser";
 import StockList from "./pages/StockList";
 import AdminOrderDetail from "./components/InvoiceDetail";
+import UserStats from "./pages/UserStats";
+import ProductSalesStats from "./pages/ProductSalesStats";
 
 export const backend_url = import.meta.env.VITE_BACKEND_URL;
 export const currency = "đ";
@@ -59,6 +61,8 @@ const App = () => {
                 <Route path="/edit-category/:id" element={<EditCategory token={token} />} />
                 <Route path="/update-user/:id" element={<EditUser token={token} />} />
                 <Route path="/order-stats" element={<OrderStats token={token} />} />
+                <Route path="/user-stats" element={<UserStats token={token} />} />
+                <Route path="/product-stats" element={<ProductSalesStats token={token} />} />
               </Routes>
             </div>
           </div>
