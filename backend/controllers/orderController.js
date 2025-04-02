@@ -255,20 +255,20 @@ const placeOrderStripe = async (req, res) => {
         product_data: {
           name: item.name,
         },
-        unit_amount: Math.round(item.price * 100), // Convert price to VND (in cents)
+        unit_amount: Math.round(item.price), // Convert price to VND (in cents)
       },
       quantity: item.quantity,
     }));
 
     // Add delivery charges to the line items
-    const deliveryChargesVND = 10000; // Delivery charges in VND
+    const deliveryChargesVND = 1000; // Delivery charges in VND
     line_items.push({
       price_data: {
         currency: 'vnd',
         product_data: {
           name: "Delivery charges",
         },
-        unit_amount: deliveryChargesVND * 100, // Convert to cents
+        unit_amount: deliveryChargesVND, // Convert to cents
       },
       quantity: 1,
     });
@@ -507,7 +507,7 @@ const cancelOrder = async (req, res) => {
       return res.status(400).json({ success: false, message: "Đơn hàng đã được hủy trước đó" });
     }
 
-    if (order.status !== "Order placed") {
+    if (order.status !== "Order Placed") {
       return res.status(400).json({ success: false, message: "Đơn hàng không thể bị hủy ở giai đoạn này" });
     }
 
@@ -621,8 +621,7 @@ const getOrderStats = async (req, res) => {
 const generateInvoice = async (req, res) => {
   try {
     const { orderId } = req.params;
-    console.log(orderId);
-    // Correct extraction from body
+
     if (!orderId) {
       return res.status(400).json({ success: false, message: "Mã đơn hàng là bắt buộc" });
     }
@@ -639,7 +638,7 @@ const generateInvoice = async (req, res) => {
     }
 
     // Tạo tên và đường dẫn file PDF
-    const fileName = `invoice_${orderId}.pdf`;
+    const fileName = `Hoadon${orderId}.pdf`;
     const filePath = path.join(invoiceDir, fileName);
 
     // Đường dẫn font hỗ trợ tiếng Việt
@@ -654,29 +653,46 @@ const generateInvoice = async (req, res) => {
     doc.registerFont('Roboto', fontPath);
     doc.font('Roboto');
 
-    // Nội dung hóa đơn
-    doc.fontSize(20).text('HÓA ĐƠN MUA HÀNG', { align: 'center' });
-    doc.moveDown();
-    doc.fontSize(12).text(`Mã đơn hàng: ${orderId}`);
-    doc.text(`Ngày đặt hàng: ${new Date(order.date).toLocaleDateString()}`);
-    doc.text(`Phương thức thanh toán: ${order.paymentMethod}`);
-    doc.text(`Trạng thái: ${order.status}`);
+    // Nội dung hóa đơn theo mẫu
+    doc.fontSize(16).text('NHÀ SÁCH TRI THỨC', { align: 'center' });
+    doc.fontSize(12).text('Địa chỉ: Thôn Rền, Cảnh Hưng, Tiên Du, Bắc Ninh', { align: 'center' });
+    doc.text('ĐT: 0879817410', { align: 'center' });
     doc.moveDown();
 
-    doc.text('Thông tin khách hàng:', { underline: true });
-    const customerName = `${order.address.firstName || ''} ${order.address.lastName || ''}`.trim();
-    doc.text(`Tên: ${customerName}`);
+    doc.fontSize(14).text('HÓA ĐƠN BÁN HÀNG', { align: 'center', underline: true });
+    doc.moveDown();
+
+    doc.fontSize(12).text(`Tên khách hàng: ${order.address.firstName} ${order.address.lastName}`);
     doc.text(`Địa chỉ: ${order.address.street}, ${order.address.city}`);
-    doc.text(`Số điện thoại: ${order.address.phone}`);
     doc.moveDown();
 
-    doc.text('Danh sách sản phẩm:', { underline: true });
+    // Bảng sản phẩm
+    doc.text('STT   TÊN HÀNG                              SỐ LƯỢNG       ĐƠN GIÁ       THÀNH TIỀN', { underline: true });
     order.items.forEach((item, index) => {
-      doc.text(`${index + 1}. ${item.name} - ${item.quantity} x ${item.price} đ`);
+      const totalPrice = item.quantity * item.price;
+      doc.text(
+        `${(index + 1).toString().padEnd(10)}${item.name.padEnd(45)}${item.quantity.toString().padEnd(20)}${item.price.toString().padEnd(15)}${totalPrice}`
+      );
+    });
+
+    // Tổng cộng
+    doc.moveDown();
+    doc.text(`CỘNG: ${order.amount - 1000} đ`, { align: 'right' });
+    doc.text("PHÍ SHIP: 1000 đ", { align: 'right' });
+    doc.text(`Thành tiền: ${order.amount} đ`, { align: 'right' });
+    doc.moveDown();
+
+    // Footer
+    const currentDate = new Date();
+    doc.text(`Ngày ${currentDate.getDate()} tháng ${currentDate.getMonth() + 1} năm ${currentDate.getFullYear()}`, {
+      align: 'right',
     });
     doc.moveDown();
-
-    doc.fontSize(14).text(`Tổng cộng: ${order.amount} đ`, { align: 'right' });
+    doc.text(`KHÁCH HÀNG`, { align: 'left' });
+    doc.text('NGƯỜI BÁN HÀNG', { align: 'right' });
+    doc.moveDown();
+    doc.text(`${order.address.firstName} ${order.address.lastName}`, { align: 'left' });
+    doc.text('Đắc Quyết', { align: 'right' });
 
     doc.end();
 

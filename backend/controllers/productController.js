@@ -1,6 +1,7 @@
 import cloudinary from 'cloudinary';
 import productModel from '../models/productModel.js';
 import stockModel from '../models/stockModel.js';
+import orderModel from '../models/orderModel.js';
 
 const createProduct = async (req, res) => {
   try {
@@ -286,12 +287,7 @@ const getAllProduct = async (req, res) => {
 
     // Optional filter by category
     const filter = category ? { category } : {};
-
     const products = await productModel.find(filter);
-
-    // if (products.length === 0) {
-    //   return res.status(404).json({ success: false, message: "No products found." });
-    // }
 
     res.json({ success: true, products });
   } catch (error) {
@@ -320,143 +316,6 @@ const getProductById = async (req, res) => {
     res.status(500).json({ success: false, message: "Internal server error.", error: error.message });
   }
 };
-
-// const updateProduct = async (req, res) => {
-//   try {
-//     const { id } = req.params; // Lấy ID sản phẩm từ URL
-//     const { name, description, category, image, price, popular } = req.body; // Các trường cần cập nhật
-
-//     // Kiểm tra ID
-//     if (!id) {
-//       return res.status(400).json({ success: false, message: "Product ID is required" });
-//     }
-
-//     // Tìm sản phẩm
-//     const product = await productModel.findById(id);
-//     if (!product) {
-//       return res.status(404).json({ success: false, message: "Product not found" });
-//     }
-
-//     if (name) product.name = name;
-//     if (description) product.description = description;
-//     if (category) product.category = category;
-//     if (image) product.image = image;
-//     if (price) {
-//       if (isNaN(price) || price <= 0) {
-//         return res.status(400).json({ success: false, message: "Price must be a positive number" });
-//       }
-//       product.price = price;
-//     }
-//     if (popular !== undefined) product.popular = popular;
-
-//     // Lưu thay đổi
-//     const updatedProduct = await product.save();
-
-//     res.status(200).json({
-//       success: true,
-//       message: "Product updated successfully",
-//       product: updatedProduct,
-//     });
-//   } catch (error) {
-//     console.error("Error updating product:", error);
-//     res.status(500).json({ success: false, message: "Internal server error" });
-//   }
-// };
-// Function to update a product
-// const updateProduct = async (req, res) => {
-//   try {
-//     const { id } = req.params;
-//     const { name, description, author, category, price, popular, quantity } = req.body;
-
-//     if (!id) {
-//       return res.status(400).json({
-//         success: false,
-//         message: 'Mã sách là bắt buộc.'
-//       });
-//     }
-
-//     const product = await productModel.findById(id);
-//     if (!product) {
-//       return res.status(404).json({
-//         success: false,
-//         message: 'Không tìm thấy sách.'
-//       });
-//     }
-
-//     if (name) product.name = name;
-//     if (description) product.description = description;
-//     if (author) product.author = author;
-//     if (category) product.category = category;
-//     if (quantity) product.quantity = quantity;
-
-//     if (price) {
-//       if (isNaN(price) || price <= 0) {
-//         return res.status(400).json({
-//           success: false,
-//           message: 'Giá sách phải lớn hơn 0.'
-//         });
-//       }
-//       product.price = Number(price);
-//     }
-
-//     if (popular !== undefined) {
-//       product.popular = popular === 'true' || popular === true;
-//     }
-
-//     if (req.file) {
-//       try {
-//         const uploadResult = await cloudinary.v2.uploader.upload(req.file.path, {
-//           resource_type: 'image'
-//         });
-//         product.image = uploadResult.secure_url;
-//       } catch (error) {
-//         return res.status(500).json({
-//           success: false,
-//           message: 'Lỗi tải hình ảnh.',
-//           error: error.message
-//         });
-//       }
-//     }
-
-//     if (quantity !== undefined) {
-//       console.log('Old quantity:', product.quantity);
-//       console.log('Old total quantity:', product.totalQuantity);
-
-//       const oldQuantity = product.quantity || 0;
-//       const newQuantity = Number(quantity);
-
-//       // Nếu là lần đầu cập nhật hoặc totalQuantity chưa được set
-//       if (!product.totalQuantity) {
-//         product.totalQuantity = newQuantity;
-//       } else {
-//         // Nếu số lượng mới lớn hơn số lượng cũ, cộng thêm phần chênh lệch vào tổng
-//         if (newQuantity > oldQuantity) {
-//           product.totalQuantity += (newQuantity - oldQuantity);
-//         }
-//       }
-
-//       // Cập nhật số lượng hiện tại
-//       product.quantity = newQuantity;
-
-//       console.log('New quantity:', product.quantity);
-//       console.log('New total quantity:', product.totalQuantity);
-//     }
-
-//     const updatedProduct = await product.save();
-//     return res.status(200).json({
-//       success: true,
-//       message: 'Cập nhật sách thành công!!.',
-//       product: updatedProduct
-//     });
-//   } catch (error) {
-//     console.error('Error updating product:', error);
-//     return res.status(500).json({
-//       success: false,
-//       message: 'Internal server error.',
-//       error: error.message
-//     });
-//   }
-// };
 
 // Cập nhật thông tin sản phẩm
 const updateProduct = async (req, res) => {
@@ -557,5 +416,28 @@ const updateProduct = async (req, res) => {
   }
 };
 
+const getProductSalesStats = async (req, res) => {
+  try {
+    const stats = await orderModel.aggregate([
+      { $unwind: "$items" }, // Decompose the items array into individual documents
+      {
+        $group: {
+          _id: "$items._id", // Group by product ID
+          name: { $first: "$items.name" }, // Get the product name
+          image: { $first: "$items.image" }, // Get the product image
+          totalSold: { $sum: "$items.quantity" }, // Sum the quantities sold
+        },
+      },
+      { $sort: { totalSold: -1 } }, // Sort by total sold in descending order
+    ]);
 
-export { createProduct, deleteProduct, getAllProduct, updateStockItem, getSaleProductList, getProductById, updateProduct, addToStock, addProductForSale, getStockList, deleteStockItem };
+    const totalProductsSold = stats.reduce((sum, product) => sum + product.totalSold, 0);
+
+    res.status(200).json({ success: true, stats, totalProductsSold });
+  } catch (error) {
+    console.error("Error fetching product sales stats:", error);
+    res.status(500).json({ success: false, message: "Internal server error." });
+  }
+};
+
+export { createProduct, deleteProduct, getAllProduct, updateStockItem, getSaleProductList, getProductById, updateProduct, addToStock, addProductForSale, getStockList, deleteStockItem, getProductSalesStats };

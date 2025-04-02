@@ -121,7 +121,23 @@ const SideBar = ({ setToken }) => {
                 {renderNavLink('/orders', <FaShoppingCart size={20} />, 'Đơn hàng')}
               </li>
               <li>
-                {renderNavLink('/order-stats', <ImStatsDots size={20} />, 'Thống kê')}
+                <div
+                  className="p-4 flex items-center justify-between hover:bg-gray-100 cursor-pointer"
+                  onClick={() => toggleDropdown('thongKe')}
+                >
+                  <div className="flex items-center gap-4">
+                    <BiSolidCategory size={20} />
+                    <span>Thống kê</span>
+                  </div>
+                  {renderDropdownArrow(dropdownState.thongKe)}
+                </div>
+                {dropdownState.thongKe && (
+                  <ul className="pl-8">
+                    <li>{renderNavLink('/order-stats', <ImStatsDots size={20} />, 'Thống kê đơn hàng')}</li>
+                    {/* <li>{renderNavLink('/user-stats', <IoIosListBox size={20} />, 'Thống kê người dùng')}</li> */}
+                    <li>{renderNavLink('/product-stats', <ImStatsDots size={20} />, 'Thống kê sản phẩm')}</li>
+                  </ul>
+                )}
               </li>
             </ul>
           </div>

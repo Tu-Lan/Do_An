@@ -101,13 +101,28 @@ const Orders = () => {
               {order.paymentMethod === "cod" && "Tiền mặt"}
             </p>
             <p className="text-gray-500">Trạng thái:
-              {order.status === "Order Placed" && "Đã đặt hàng"}
-              {order.status === "Shipped" && "Đã gửi"}
-              {order.status === "Out of delivery" && "Đang giao"}
-              {order.status === "Cancelled" && "Đã hủy"}
-              {order.status === "Delivered" && "Đã giao"}
-              {order.status === "Packing" && "Đang đóng gói"}
-              {order.status === "Shipping" && "Đang vận chuyển"}
+              {(() => {
+                const normalizedStatus = order.status?.toLowerCase(); // Normalize status to lowercase
+                console.log("Normalized Order Status:", normalizedStatus); // Debugging log
+                switch (normalizedStatus) {
+                  case "order placed":
+                    return "Đã đặt hàng";
+                  case "shipped":
+                    return "Đã gửi";
+                  case "out of delivery":
+                    return "Đang giao";
+                  case "cancelled":
+                    return "Đã hủy";
+                  case "delivered":
+                    return "Đã giao";
+                  case "packing":
+                    return "Đang đóng gói";
+                  case "shipping":
+                    return "Đang vận chuyển";
+                  default:
+                    return `Trạng thái không xác định (${order.status})`; // Include the unrecognized status in the message
+                }
+              })()}
             </p>
             <div className="mt-4">
               {order.items.map((item, i) => (

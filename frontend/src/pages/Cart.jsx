@@ -4,6 +4,7 @@ import Title from "../components/Title";
 import { FaMinus, FaPlus } from "react-icons/fa";
 import { TbTrash } from "react-icons/tb";
 import CartTotal from "../components/CartTotal";
+import { toast } from "react-toastify";
 
 const Cart = () => {
   const { books, navigate, currency, cartItems, getCartAmount, updateQuantityCart } = useContext(ShopContext);
@@ -11,6 +12,12 @@ const Cart = () => {
 
   useEffect(() => {
     setCartTotal(getCartAmount()); // Cập nhật tổng tiền mỗi khi giỏ hàng thay đổi
+  }, [cartItems]);
+
+  useEffect(() => {
+    if (Object.keys(cartItems).length === 0) {
+      toast.info("Giỏ hàng của bạn đang trống.");
+    }
   }, [cartItems]);
 
   return (

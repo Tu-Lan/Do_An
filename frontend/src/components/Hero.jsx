@@ -17,7 +17,7 @@ const Hero = () => {
             Điều đó truyền cảm hứng cho thế giới của bạn</h1>
           <p>Khám phá thế giới của những câu chuyện, kiến thức và cảm hứng. Khám phá những cuốn sách khơi dậy trí tưởng tượng, mở rộng góc nhìn và làm phong phú thêm hành trình của bạn. Từ những tác phẩm kinh điển vượt thời gian đến những kiệt tác hiện đại, hãy tìm cuốn sách hoàn hảo cho mọi khoảnh khắc</p>
           <div className="mt-6">
-            <Link to={'/store'} className="btn-secondaryOne">Khám phá ngay</Link>
+            <Link to={'/shop'} className="btn-secondaryOne">Khám phá ngay</Link>
           </div>
         </div>
         {/* Right side */}

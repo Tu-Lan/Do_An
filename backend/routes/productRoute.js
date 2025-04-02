@@ -1,5 +1,5 @@
 import express from 'express';
-import { addProductForSale, addToStock, createProduct, deleteProduct, deleteStockItem, getAllProduct, getProductById, getSaleProductList, getStockList, updateProduct, updateStockItem} from '../controllers/productController.js';
+import { addProductForSale, addToStock, createProduct, deleteProduct, deleteStockItem, getAllProduct, getProductById, getProductSalesStats, getSaleProductList, getStockList, updateProduct, updateStockItem} from '../controllers/productController.js';
 import upload from '../middleware/multer.js';
 import adminAuth from '../middleware/adminAuth.js';
 
@@ -16,5 +16,6 @@ productRouter.get('/sale/list', adminAuth, getSaleProductList);
 productRouter.delete('/delete', adminAuth, deleteProduct);
 productRouter.post('/single', getProductById);
 productRouter.get('/list', getAllProduct);
+productRouter.get("/sales-stats", adminAuth, getProductSalesStats);
 
 export default productRouter;

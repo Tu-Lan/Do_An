@@ -1,24 +1,24 @@
-import axios from "axios";
-import { toast } from "react-toastify";
+import { useState, useEffect, useContext } from "react";
 import { ShopContext } from "../context/ShopContext";
-import { useContext, useState, useEffect } from "react";
+import { toast } from "react-toastify";
+import Footer from "../components/Footer";
 
 const EditUser = () => {
-  const { navigate, token, userProfile, fetchUserProfile, updateUserProfile } = useContext(ShopContext);
+  const { token, userProfile, fetchUserProfile, updateUserProfile, navigate } = useContext(ShopContext);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
-  const [oldPassword, setOldPassword] = useState(""); // Trường mật khẩu cũ
-  const [newPassword, setNewPassword] = useState(""); // Trường mật khẩu mới
+  const [oldPassword, setOldPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
   const [image, setImage] = useState(null);
   const [previewImage, setPreviewImage] = useState(null);
-  const [gender, setGender] = useState("Male"); // Giá trị mặc định
+  const [gender, setGender] = useState("Male");
   const [birth, setBirth] = useState("");
-  const [isProfileFetched, setIsProfileFetched] = useState(false); // Cờ kiểm tra
+  const [isProfileFetched, setIsProfileFetched] = useState(false);
 
   useEffect(() => {
     if (token && !isProfileFetched) {
       fetchUserProfile();
-      setIsProfileFetched(true); // Đánh dấu đã gọi API
+      setIsProfileFetched(true);
     }
   }, [token, fetchUserProfile, isProfileFetched]);
 
@@ -26,8 +26,8 @@ const EditUser = () => {
     if (userProfile) {
       setName(userProfile.name);
       setEmail(userProfile.email);
-      setGender(userProfile.gender || "Male"); // Giá trị mặc định nếu không có
-      setBirth(userProfile.birth ? userProfile.birth.split("T")[0] : ""); // Format ngày
+      setGender(userProfile.gender || "Male");
+      setBirth(userProfile.birth ? userProfile.birth.split("T")[0] : "");
       setPreviewImage(userProfile.image);
     }
   }, [userProfile]);
@@ -50,131 +50,155 @@ const EditUser = () => {
       toast.error("Vui lòng điền đầy đủ thông tin!");
       return;
     }
-
-    // Nếu muốn thay đổi mật khẩu, yêu cầu nhập mật khẩu cũ
     if (newPassword && !oldPassword) {
       toast.error("Vui lòng nhập mật khẩu cũ để thay đổi mật khẩu mới!");
       return;
     }
-
     await updateUserProfile(name, email, oldPassword, newPassword, image, gender, birth);
   };
 
   return (
-    <div className="flex justify-center p-6">
-      <div className="px-4 sm:px-8 md:px-16 lg:px-24 xl:px-32 py-8">
-        <h2 className="text-xl font-semibold mb-6 text-gray-700">Chỉnh Sửa Hồ Sơ</h2>
-        <form onSubmit={handleSubmit} className="flex flex-col gap-y-6">
-          {/* Trường Name */}
-          <div className="flex flex-col gap-2">
-            <label htmlFor="name" className="text-sm font-semibold text-gray-700">Tên</label>
-            <input
-              id="name"
-              onChange={(e) => setName(e.target.value)}
-              value={name}
-              type="text"
-              placeholder="Nhập tên của bạn..."
-              className="border p-4 w-full rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              required
-            />
-          </div>
-
-          {/* Trường Email */}
-          <div className="flex flex-col gap-2">
-            <label htmlFor="email" className="text-sm font-semibold text-gray-700">Email</label>
-            <input
-              id="email"
-              onChange={(e) => setEmail(e.target.value)}
-              value={email}
-              type="email"
-              placeholder="Nhập email của bạn..."
-              className="border p-4 w-full rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              required
-            />
-          </div>
-
-          {/* Trường Gender */}
-          <div className="flex flex-col gap-2">
-            <label htmlFor="gender" className="text-sm font-semibold text-gray-700">Giới tính</label>
-            <select
-              id="gender"
-              onChange={(e) => setGender(e.target.value)}
-              value={gender}
-              className="border p-4 w-full rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              required
-            >
-              <option value="Male">Nam</option>
-              <option value="Female">Nữ</option>
-              <option value="Other">Khác</option>
-            </select>
-          </div>
-
-          {/* Trường Birth */}
-          <div className="flex flex-col gap-2">
-            <label htmlFor="birth" className="text-sm font-semibold text-gray-700">Ngày sinh</label>
-            <input
-              id="birth"
-              onChange={(e) => setBirth(e.target.value)}
-              value={birth}
-              type="date"
-              className="border p-4 w-full rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              required
-            />
-          </div>
-
-          {/* Trường Mật Khẩu Cũ */}
-          <div className="flex flex-col gap-2">
-            <label htmlFor="oldPassword" className="text-sm font-semibold text-gray-700">Mật Khẩu Cũ</label>
-            <input
-              id="oldPassword"
-              onChange={(e) => setOldPassword(e.target.value)}
-              value={oldPassword}
-              type="password"
-              placeholder="Nhập mật khẩu cũ..."
-              className="border p-4 w-full rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-
-          {/* Trường Mật Khẩu Mới */}
-          <div className="flex flex-col gap-2">
-            <label htmlFor="newPassword" className="text-sm font-semibold text-gray-700">Mật Khẩu Mới</label>
-            <input
-              id="newPassword"
-              onChange={(e) => setNewPassword(e.target.value)}
-              value={newPassword}
-              type="password"
-              placeholder="Nhập mật khẩu mới (tùy chọn)..."
-              className="border p-4 w-full rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-
-          {/* Trường Hình Ảnh */}
-          <div className="flex flex-col gap-2">
-            <label htmlFor="image" className="text-sm font-semibold text-gray-700">Chọn Ảnh</label>
-            <input
-              id="image"
-              type="file"
-              accept="image/*"
-              onChange={handleImageChange}
-              className="border p-4 w-full rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-
-          {/* Hiển Thị Xem Trước Hình Ảnh */}
-          {previewImage && (
-            <div className="mb-6">
-              <img src={previewImage} alt="Preview" className="w-32 h-32 object-cover rounded-full" />
-            </div>
-          )}
-
-          {/* Nút Submit */}
+    <div className="min-h-screen bg-gray-100 flex flex-col">
+      {/* Navbar */}
+      <div className="bg-white shadow-lg border-b border-gray-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex justify-between items-center">
           <button
-            type="submit"
-            className="bg-blue-600 text-white px-6 py-3 rounded-md hover:bg-blue-700 transition duration-300 ease-in-out w-full"
+            onClick={() => navigate("edit-profile")}
+            className="text-lg font-medium text-gray-900 hover:text-blue-600 transition-colors duration-200"
           >
-            Cập Nhật Hồ Sơ
+            Edit User
           </button>
-        </form>
+          <button
+            onClick={() => navigate("edit-profile/address")}
+            className="text-lg font-medium text-gray-900 hover:text-blue-600 transition-colors duration-200"
+          >
+            Address
+          </button>
+        </div>
+      </div>
+
+      {/* Form Content */}
+      <div className="flex-1 flex items-center justify-center py-12">
+        <div className="bg-white rounded-xl shadow-xl w-full max-w-2xl p-8">
+          <h2 className="text-3xl font-bold text-gray-800 mb-8 text-center">Chỉnh Sửa Hồ Sơ</h2>
+
+          <form onSubmit={handleSubmit} className="space-y-6">
+            {/* Name */}
+            <div className="space-y-2">
+              <label htmlFor="name" className="block text-sm font-medium text-gray-700">Tên</label>
+              <input
+                id="name"
+                onChange={(e) => setName(e.target.value)}
+                value={name}
+                type="text"
+                placeholder="Nhập tên của bạn..."
+                className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors duration-200"
+                required
+              />
+            </div>
+
+            {/* Email */}
+            <div className="space-y-2">
+              <label htmlFor="email" className="block text-sm font-medium text-gray-700">Email</label>
+              <input
+                id="email"
+                onChange={(e) => setEmail(e.target.value)}
+                value={email}
+                type="email"
+                placeholder="Nhập email của bạn..."
+                className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors duration-200"
+                required
+              />
+            </div>
+
+            {/* Gender */}
+            <div className="space-y-2">
+              <label htmlFor="gender" className="block text-sm font-medium text-gray-700">Giới tính</label>
+              <select
+                id="gender"
+                onChange={(e) => setGender(e.target.value)}
+                value={gender}
+                className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors duration-200"
+                required
+              >
+                <option value="Male">Nam</option>
+                <option value="Female">Nữ</option>
+                <option value="Other">Khác</option>
+              </select>
+            </div>
+
+            {/* Date of Birth */}
+            <div className="space-y-2">
+              <label htmlFor="birth" className="block text-sm font-medium text-gray-700">Ngày sinh</label>
+              <input
+                id="birth"
+                onChange={(e) => setBirth(e.target.value)}
+                value={birth}
+                type="date"
+                className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors duration-200"
+                required
+              />
+            </div>
+
+            {/* Old Password */}
+            <div className="space-y-2">
+              <label htmlFor="oldPassword" className="block text-sm font-medium text-gray-700">Mật Khẩu Cũ</label>
+              <input
+                id="oldPassword"
+                onChange={(e) => setOldPassword(e.target.value)}
+                value={oldPassword}
+                type="password"
+                placeholder="Nhập mật khẩu cũ..."
+                className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors duration-200"
+              />
+            </div>
+
+            {/* New Password */}
+            <div className="space-y-2">
+              <label htmlFor="newPassword" className="block text-sm font-medium text-gray-700">Mật Khẩu Mới</label>
+              <input
+                id="newPassword"
+                onChange={(e) => setNewPassword(e.target.value)}
+                value={newPassword}
+                type="password"
+                placeholder="Nhập mật khẩu mới (tùy chọn)..."
+                className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors duration-200"
+              />
+            </div>
+
+            {/* Profile Picture */}
+            <div className="space-y-2">
+              <label htmlFor="image" className="block text-sm font-medium text-gray-700">Chọn Ảnh</label>
+              <input
+                id="image"
+                type="file"
+                accept="image/*"
+                onChange={handleImageChange}
+                className="w-full px-4 py-3 rounded-lg border border-gray-300 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 transition-colors duration-200"
+              />
+            </div>
+
+            {/* Image Preview */}
+            {previewImage && (
+              <div className="flex justify-center mb-6">
+                <img
+                  src={previewImage}
+                  alt="Preview"
+                  className="w-32 h-32 object-cover rounded-full border-4 border-gray-200 shadow-md"
+                />
+              </div>
+            )}
+
+            {/* Submit Button */}
+            <button
+              type="submit"
+              className="w-full bg-blue-600 text-white py-3 px-6 rounded-lg hover:bg-blue-700 focus:ring-4 focus:ring-blue-200 transition-all duration-200 font-medium text-lg"
+            >
+              Cập Nhật Hồ Sơ
+            </button>
+          </form>
+          <Footer />
+        </div>
       </div>
     </div>
   );
