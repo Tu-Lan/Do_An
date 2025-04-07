@@ -5,7 +5,6 @@ import { toast } from "react-toastify";
 import tt from "@tomtom-international/web-sdk-maps";
 import "@tomtom-international/web-sdk-maps/dist/maps.css";
 
-// EditUser Component
 const EditUser = () => {
   const { token, userProfile, fetchUserProfile, updateUserProfile } = useContext(ShopContext);
   const [name, setName] = useState("");
@@ -152,7 +151,6 @@ const EditUser = () => {
   );
 };
 
-// AddressManager Component
 const AddressManager = () => {
   const { token, backend_url } = useContext(ShopContext);
 
@@ -403,21 +401,17 @@ const AddressManager = () => {
   );
 };
 
-// Main Profile Component
 const UserSettings = () => {
   const { token, userProfile, fetchUserProfile, updateUserProfile, backend_url, navigate } = useContext(ShopContext);
   const [activeTab, setActiveTab] = useState("edit-user");
 
   return (
     <div className="min-h-screen bg-gray-100 flex flex-col">
-      {/* Header (giả sử đây là header của trang) */}
       <div className="bg-white shadow-lg border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          {/* Nội dung header nếu có */}
         </div>
       </div>
 
-      {/* Navigation Tabs */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-6">
         <div className="flex justify-center space-x-8 bg-white shadow-md rounded-lg p-4">
           <button
@@ -441,7 +435,6 @@ const UserSettings = () => {
         </div>
       </div>
 
-      {/* Main Content */}
       <div className="flex-1 flex items-center justify-center py-12">
         <div className="w-full max-w-4xl">
           {activeTab === "edit-user" ? (

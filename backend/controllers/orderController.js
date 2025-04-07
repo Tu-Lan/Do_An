@@ -135,7 +135,6 @@ const placeOrder = async (req, res) => {
 
     let orderItems = [];
 
-    // Kiểm tra số lượng sản phẩm và các trường yêu cầu
     for (const item of items) {
       const product = await productModel.findById(item._id);
       if (!product) {
@@ -149,23 +148,20 @@ const placeOrder = async (req, res) => {
         });
       }
 
-      // Kiểm tra trường 'publisher' của sản phẩm
       if (!product.publisher) {
         return res.status(400).json({ success: false, message: `Sản phẩm ${item.name} thiếu thông tin nhà xuất bản.` });
       }
 
-      // Thêm sản phẩm vào danh sách orderItems
       orderItems.push({
         _id: product._id,
         name: product.name,
         price: product.price,
         quantity: item.quantity,
-        publisher: product.publisher, // Đảm bảo publisher có mặt
+        publisher: product.publisher,
         image: product.image,
       });
     }
 
-    // Tạo đơn hàng
     const orderData = {
       userId,
       items: orderItems,
@@ -178,12 +174,10 @@ const placeOrder = async (req, res) => {
     const newOrder = new orderModel(orderData);
     await newOrder.save();
 
-    // Cập nhật số lượng sản phẩm
     for (const item of orderItems) {
       const product = await productModel.findById(item._id);
       product.quantity -= item.quantity;
 
-      // Cảnh báo nếu hết hàng
       if (product.quantity === 0) {
         console.warn(`Sản phẩm ${product.name} đang hết hàng.`);
       }
@@ -208,7 +202,6 @@ const placeOrderStripe = async (req, res) => {
       return res.status(400).json({ success: false, message: "Không có sản phẩm nào trong đơn hàng." });
     }
 
-    // Check stock for each product
     for (const item of items) {
       const product = await productModel.findById(item._id);
       if (!product) {
@@ -223,11 +216,9 @@ const placeOrderStripe = async (req, res) => {
       }
     }
 
-    // Calculate total amount including delivery charges
-    const totalAmountVND = amount + 10000; // Amount + delivery charges (10,000 VND)
-    const minAmountVND = 11500; // Minimum amount for Stripe (50 cents, approximately 11,500 VND)
+    const totalAmountVND = amount + 10000; 
+    const minAmountVND = 11500; 
 
-    // Check if the total amount is below the minimum
     if (totalAmountVND < minAmountVND) {
       return res.status(400).json({
         success: false,
@@ -235,11 +226,10 @@ const placeOrderStripe = async (req, res) => {
       });
     }
 
-    // Create order in the database first
     const orderData = {
       userId,
       items,
-      amount: totalAmountVND, // Set the total amount
+      amount: totalAmountVND,
       address,
       paymentMethod: "Stripe",
       payment: false,
@@ -248,32 +238,29 @@ const placeOrderStripe = async (req, res) => {
     const newOrder = new orderModel(orderData);
     await newOrder.save();
 
-    // Create Stripe session
     const line_items = items.map((item) => ({
       price_data: {
         currency: 'vnd',
         product_data: {
           name: item.name,
         },
-        unit_amount: Math.round(item.price), // Convert price to VND (in cents)
+        unit_amount: Math.round(item.price), 
       },
       quantity: item.quantity,
     }));
 
-    // Add delivery charges to the line items
-    const deliveryChargesVND = 1000; // Delivery charges in VND
+    const deliveryChargesVND = 1000;
     line_items.push({
       price_data: {
         currency: 'vnd',
         product_data: {
           name: "Delivery charges",
         },
-        unit_amount: deliveryChargesVND, // Convert to cents
+        unit_amount: deliveryChargesVND, 
       },
       quantity: 1,
     });
 
-    // Create the Stripe session
     const session = await stripe.checkout.sessions.create({
       success_url: `${origin}/verify?success=true&orderId=${newOrder._id}`,
       cancel_url: `${origin}/verify?success=false&orderId=${newOrder._id}`,
@@ -281,12 +268,10 @@ const placeOrderStripe = async (req, res) => {
       mode: 'payment',
     });
 
-    // Update product stock
     for (const item of items) {
       const product = await productModel.findById(item._id);
       product.quantity -= item.quantity;
 
-      // Log if product is out of stock
       if (product.quantity === 0) {
         console.warn(`Sản phẩm ${product.name} đang hết hàng.`);
       }
@@ -339,29 +324,25 @@ const createPaymentLink = async (req, res) => {
 
 export { createPaymentLink };
 
-// Lấy chi tiết đơn hàng đầy đủ
 const getOrderDetail = async (req, res) => {
   try {
     const { orderId } = req.params;
 
-    // Kiểm tra xem orderId có được cung cấp không
     if (!orderId) {
       return res.status(400).json({ success: false, message: "Mã đơn hàng là bắt buộc" });
     }
 
-    // Lấy chi tiết đơn hàng từ database và populate các trường liên quan đến sản phẩm
     const order = await orderModel.findById(orderId)
       .populate({
-        path: 'items._id', // Populate thông tin sản phẩm
-        model: productModel, // Đảm bảo rằng bạn đang populate từ productModel
-        select: 'name description price author image category' // Chỉ lấy những trường cần thiết
+        path: 'items._id', 
+        model: productModel, 
+        select: 'name description price author image category' 
       });
 
     if (!order) {
       return res.status(404).json({ success: false, message: "Đơn hàng không tìm thấy" });
     }
 
-    // Trả về thông tin chi tiết đơn hàng với thông tin đầy đủ về sản phẩm
     res.json({ success: true, order });
   } catch (error) {
     console.error("Error fetching order details:", error);
@@ -381,7 +362,7 @@ const allOrder = async (req, res) => {
 
 const userOrders = async (req, res) => {
   try {
-    const userId = req.user.id; // Lấy trực tiếp userId
+    const userId = req.user.id;
     const orders = await orderModel.find({ userId });
     res.json({ success: true, orders });
   } catch (error) {
@@ -491,18 +472,15 @@ const cancelOrder = async (req, res) => {
   try {
     const { orderId } = req.body;
 
-    // Kiểm tra orderId
     if (!orderId) {
       return res.status(400).json({ success: false, message: "ID đơn hàng là bắt buộc" });
     }
 
-    // Tìm đơn hàng
     const order = await orderModel.findById(orderId);
     if (!order) {
       return res.status(404).json({ success: false, message: "Đơn hàng không tìm thấy" });
     }
 
-    // Kiểm tra trạng thái đơn hàng
     if (order.status === "Cancelled") {
       return res.status(400).json({ success: false, message: "Đơn hàng đã được hủy trước đó" });
     }
@@ -511,11 +489,9 @@ const cancelOrder = async (req, res) => {
       return res.status(400).json({ success: false, message: "Đơn hàng không thể bị hủy ở giai đoạn này" });
     }
 
-    // Cập nhật trạng thái thành 'Cancelled'
     order.status = "Cancelled";
     await order.save();
 
-    // Cộng lại số lượng sản phẩm trong kho
     for (const item of order.items) {
       const product = await productModel.findById(item._id);
       if (product) {
@@ -533,7 +509,6 @@ const cancelOrder = async (req, res) => {
 
 const getOrderStats = async (req, res) => {
   try {
-    // Lấy tất cả dữ liệu đơn hàng mà không lọc ở backend
     const stats = await orderModel.find({});
     res.json({ success: true, stats });
   } catch (error) {
@@ -631,29 +606,23 @@ const generateInvoice = async (req, res) => {
       return res.status(404).json({ success: false, message: "Đơn hàng không tìm thấy" });
     }
 
-    // Tạo đường dẫn thư mục invoices
     const invoiceDir = path.join(__dirname, '..', 'invoices');
     if (!fs.existsSync(invoiceDir)) {
       fs.mkdirSync(invoiceDir);
     }
 
-    // Tạo tên và đường dẫn file PDF
     const fileName = `Hoadon${orderId}.pdf`;
     const filePath = path.join(invoiceDir, fileName);
 
-    // Đường dẫn font hỗ trợ tiếng Việt
     const fontPath = path.join(__dirname, '..', 'assets', 'fonts', 'Roboto-Regular.ttf');
 
-    // Tạo file PDF
     const doc = new pdfkit();
     const stream = fs.createWriteStream(filePath);
     doc.pipe(stream);
 
-    // Sử dụng font tiếng Việt
     doc.registerFont('Roboto', fontPath);
     doc.font('Roboto');
 
-    // Nội dung hóa đơn theo mẫu
     doc.fontSize(16).text('NHÀ SÁCH TRI THỨC', { align: 'center' });
     doc.fontSize(12).text('Địa chỉ: Thôn Rền, Cảnh Hưng, Tiên Du, Bắc Ninh', { align: 'center' });
     doc.text('ĐT: 0879817410', { align: 'center' });
@@ -666,7 +635,6 @@ const generateInvoice = async (req, res) => {
     doc.text(`Địa chỉ: ${order.address.street}, ${order.address.city}`);
     doc.moveDown();
 
-    // Bảng sản phẩm
     doc.text('STT   TÊN HÀNG                              SỐ LƯỢNG       ĐƠN GIÁ       THÀNH TIỀN', { underline: true });
     order.items.forEach((item, index) => {
       const totalPrice = item.quantity * item.price;
@@ -675,7 +643,6 @@ const generateInvoice = async (req, res) => {
       );
     });
 
-    // Tổng cộng
     doc.moveDown();
     doc.text(`CỘNG: ${order.amount - 1000} đ`, { align: 'right' });
     doc.text("PHÍ SHIP: 1000 đ", { align: 'right' });
@@ -696,7 +663,6 @@ const generateInvoice = async (req, res) => {
 
     doc.end();
 
-    // Khi hoàn thành việc tạo PDF, gửi file về client
     stream.on('finish', () => {
       res.download(filePath, fileName, (err) => {
         if (err) {
@@ -704,7 +670,6 @@ const generateInvoice = async (req, res) => {
           res.status(500).json({ success: false, message: "Hóa đơn lỗi" });
         }
 
-        // Xóa file sau khi tải xong
         fs.unlinkSync(filePath);
       });
     });

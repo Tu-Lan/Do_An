@@ -59,7 +59,6 @@ const EditUser = () => {
 
   return (
     <div className="min-h-screen bg-gray-100 flex flex-col">
-      {/* Navbar */}
       <div className="bg-white shadow-lg border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex justify-between items-center">
           <button
@@ -77,7 +76,6 @@ const EditUser = () => {
         </div>
       </div>
 
-      {/* Form Content */}
       <div className="flex-1 flex items-center justify-center py-12">
         <div className="bg-white rounded-xl shadow-xl w-full max-w-2xl p-8">
           <h2 className="text-3xl font-bold text-gray-800 mb-8 text-center">Chỉnh Sửa Hồ Sơ</h2>
@@ -97,7 +95,6 @@ const EditUser = () => {
               />
             </div>
 
-            {/* Email */}
             <div className="space-y-2">
               <label htmlFor="email" className="block text-sm font-medium text-gray-700">Email</label>
               <input
@@ -111,7 +108,6 @@ const EditUser = () => {
               />
             </div>
 
-            {/* Gender */}
             <div className="space-y-2">
               <label htmlFor="gender" className="block text-sm font-medium text-gray-700">Giới tính</label>
               <select
@@ -127,7 +123,6 @@ const EditUser = () => {
               </select>
             </div>
 
-            {/* Date of Birth */}
             <div className="space-y-2">
               <label htmlFor="birth" className="block text-sm font-medium text-gray-700">Ngày sinh</label>
               <input
@@ -140,7 +135,6 @@ const EditUser = () => {
               />
             </div>
 
-            {/* Old Password */}
             <div className="space-y-2">
               <label htmlFor="oldPassword" className="block text-sm font-medium text-gray-700">Mật Khẩu Cũ</label>
               <input
@@ -153,7 +147,6 @@ const EditUser = () => {
               />
             </div>
 
-            {/* New Password */}
             <div className="space-y-2">
               <label htmlFor="newPassword" className="block text-sm font-medium text-gray-700">Mật Khẩu Mới</label>
               <input
@@ -166,7 +159,6 @@ const EditUser = () => {
               />
             </div>
 
-            {/* Profile Picture */}
             <div className="space-y-2">
               <label htmlFor="image" className="block text-sm font-medium text-gray-700">Chọn Ảnh</label>
               <input
@@ -178,7 +170,6 @@ const EditUser = () => {
               />
             </div>
 
-            {/* Image Preview */}
             {previewImage && (
               <div className="flex justify-center mb-6">
                 <img
@@ -189,7 +180,6 @@ const EditUser = () => {
               </div>
             )}
 
-            {/* Submit Button */}
             <button
               type="submit"
               className="w-full bg-blue-600 text-white py-3 px-6 rounded-lg hover:bg-blue-700 focus:ring-4 focus:ring-blue-200 transition-all duration-200 font-medium text-lg"

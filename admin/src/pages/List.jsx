@@ -60,7 +60,6 @@ const List = ({ token }) => {
     <div className="px-2 sm:px-8 mt-4 sm:mt-14">
       <h2 className="text-xl font-bold mb-4 text-gray-800">Danh sách sách</h2>
 
-      {/* Thanh tìm kiếm */}
       <div className="mb-6">
         <input
           type="text"
@@ -82,7 +81,6 @@ const List = ({ token }) => {
           <h5>Sửa</h5>
         </div>
 
-        {/* Product List */}
         {filteredList.length === 0 ? (
           <div className="text-center py-4">
             <h5 className="text-lg font-semibold">
@@ -103,7 +101,6 @@ const List = ({ token }) => {
                 {currency}
               </div>
 
-              {/* Hiển thị thông báo số lượng */}
               <div className="text-sm font-semibold">
                 {item.quantity === 0 ? (
                   <span className="text-red-500">Hết hàng ({item.quantity}/{item.totalQuantity})</span>
@@ -116,7 +113,6 @@ const List = ({ token }) => {
                 )}
               </div>
 
-              {/* Nút xóa */}
               <div>
                 <TbTrash
                   onClick={() => removeProduct(item._id)}
@@ -124,7 +120,6 @@ const List = ({ token }) => {
                 />
               </div>
 
-              {/* Nút edit */}
               <div>
                 <TbEdit
                   onClick={() => navigate(`/edit-product/${item._id}`)}

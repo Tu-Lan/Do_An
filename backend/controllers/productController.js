@@ -2,6 +2,7 @@ import cloudinary from 'cloudinary';
 import productModel from '../models/productModel.js';
 import stockModel from '../models/stockModel.js';
 import orderModel from '../models/orderModel.js';
+import importModel from '../models/importModel.js';
 
 const createProduct = async (req, res) => {
   try {
@@ -15,9 +16,8 @@ const createProduct = async (req, res) => {
       return res.status(400).json({ success: false, message: "Giá sách phải lớn hơn 0." });
     }
 
-    let imageUrl = "https://via.placeholder.com/150"; // Default image
+    let imageUrl = "https://via.placeholder.com/150"; 
 
-    // Handle file upload
     if (req.file) {
       try {
         const uploadResult = await cloudinary.uploader.upload(req.file.path, { resource_type: "image" });
@@ -27,7 +27,6 @@ const createProduct = async (req, res) => {
       }
     }
 
-    // Construct product data
     const initialQuantity = Number(quantity) || 0;
     const productData = {
       name,
@@ -37,12 +36,11 @@ const createProduct = async (req, res) => {
       price: Number(price),
       popular: popular === "true" ? true : false,
       quantity: initialQuantity,
-      totalQuantity: initialQuantity, // Initialize totalQuantity with initial quantity
+      totalQuantity: initialQuantity, 
       image: imageUrl,
       date: new Date(),
     };
 
-    // Save product to database
     const product = new productModel(productData);
     await product.save();
 
@@ -53,6 +51,56 @@ const createProduct = async (req, res) => {
   }
 };
 
+// const addToStock = async (req, res) => {
+//   try {
+//     const { name, author, publisher, price, quantity } = req.body;
+
+//     if (!name || !author || !publisher || !price || !quantity) {
+//       return res.status(400).json({ success: false, message: "Tất cả các trường cần được nhập." });
+//     }
+
+//     if (isNaN(price) || price <= 0) {
+//       return res.status(400).json({ success: false, message: "Giá phải lớn hơn 0." });
+//     }
+
+//     let imageUrl = "https://via.placeholder.com/150"; // Ảnh mặc định
+
+//     // Xử lý upload ảnh lên Cloudinary
+//     if (req.file) {
+//       try {
+//         const uploadResult = await cloudinary.uploader.upload(req.file.path, { resource_type: "image" });
+//         imageUrl = uploadResult.secure_url;
+//       } catch (error) {
+//         return res.status(500).json({ success: false, message: "Lỗi tải hình ảnh.", error: error.message });
+//       }
+//     }
+
+//     // Kiểm tra nếu sản phẩm đã có trong kho
+//     let stockItem = await stockModel.findOne({ name, author });
+
+//     if (stockItem) {
+//       // Nếu sản phẩm đã có, cập nhật số lượng
+//       stockItem.quantity += Number(quantity);
+//       await stockItem.save();
+//       return res.status(200).json({ success: true, message: "Sản phẩm đã có trong kho, số lượng đã được cập nhật.", stock: stockItem });
+//     } else {
+//       // Nếu sản phẩm chưa có, thêm mới
+//       stockItem = new stockModel({
+//         name,
+//         author,
+//         publisher, // Thêm publisher
+//         image: imageUrl,
+//         price: Number(price),
+//         quantity: Number(quantity),
+//       });
+//       await stockItem.save();
+//       return res.status(201).json({ success: true, message: "Sản phẩm đã được thêm vào kho.", stock: stockItem });
+//     }
+//   } catch (error) {
+//     console.error("Lỗi khi thêm vào kho:", error);
+//     res.status(500).json({ success: false, message: "Lỗi server.", error: error.message });
+//   }
+// };
 const addToStock = async (req, res) => {
   try {
     const { name, author, publisher, price, quantity } = req.body;
@@ -65,9 +113,8 @@ const addToStock = async (req, res) => {
       return res.status(400).json({ success: false, message: "Giá phải lớn hơn 0." });
     }
 
-    let imageUrl = "https://via.placeholder.com/150"; // Ảnh mặc định
+    let imageUrl = "https://via.placeholder.com/150"; 
 
-    // Xử lý upload ảnh lên Cloudinary
     if (req.file) {
       try {
         const uploadResult = await cloudinary.uploader.upload(req.file.path, { resource_type: "image" });
@@ -77,51 +124,80 @@ const addToStock = async (req, res) => {
       }
     }
 
-    // Kiểm tra nếu sản phẩm đã có trong kho
     let stockItem = await stockModel.findOne({ name, author });
 
     if (stockItem) {
-      // Nếu sản phẩm đã có, cập nhật số lượng
       stockItem.quantity += Number(quantity);
       await stockItem.save();
-      return res.status(200).json({ success: true, message: "Sản phẩm đã có trong kho, số lượng đã được cập nhật.", stock: stockItem });
+
+      const importData = {
+        stockItemId: stockItem._id,
+        name,
+        author,
+        publisher,
+        price: Number(price),
+        quantity: Number(quantity),
+        image: imageUrl,
+      };
+      const newImport = new importModel(importData);
+      await newImport.save();
+
+      return res.status(200).json({
+        success: true,
+        message: "Sản phẩm đã có trong kho, số lượng đã được cập nhật và phiếu nhập đã được tạo.",
+        stock: stockItem,
+        importTicket: newImport, 
+      });
     } else {
-      // Nếu sản phẩm chưa có, thêm mới
       stockItem = new stockModel({
         name,
         author,
-        publisher, // Thêm publisher
+        publisher,
         image: imageUrl,
         price: Number(price),
         quantity: Number(quantity),
       });
       await stockItem.save();
-      return res.status(201).json({ success: true, message: "Sản phẩm đã được thêm vào kho.", stock: stockItem });
+
+      const importData = {
+        stockItemId: stockItem._id,
+        name,
+        author,
+        publisher,
+        price: Number(price),
+        quantity: Number(quantity),
+        image: imageUrl,
+      };
+      const newImport = new importModel(importData);
+      await newImport.save();
+
+      return res.status(201).json({
+        success: true,
+        message: "Sản phẩm đã được thêm vào kho và phiếu nhập đã được tạo.",
+        stock: stockItem,
+        importTicket: newImport, 
+      });
     }
   } catch (error) {
     console.error("Lỗi khi thêm vào kho:", error);
     res.status(500).json({ success: false, message: "Lỗi server.", error: error.message });
   }
 };
-
 const updateStockItem = async (req, res) => {
   try {
-    const { id } = req.params; // Lấy ID sản phẩm từ URL
+    const { id } = req.params; 
     const { name, author, publisher, price, quantity } = req.body;
 
-    // Kiểm tra dữ liệu yêu cầu
     if (!name || !author || !publisher || !price || !quantity) {
       return res.status(400).json({ success: false, message: "Tất cả các trường cần được nhập." });
     }
 
-    // Tìm sản phẩm trong kho
     const stockItem = await stockModel.findById(id);
 
     if (!stockItem) {
       return res.status(404).json({ success: false, message: "Không tìm thấy sản phẩm trong kho." });
     }
 
-    // Cập nhật các thông tin sản phẩm
     stockItem.name = name || stockItem.name;
     stockItem.author = author || stockItem.author;
     stockItem.publisher = publisher || stockItem.publisher;
@@ -148,15 +224,12 @@ const addProductForSale = async (req, res) => {
       return res.status(400).json({ success: false, message: "Tất cả các trường cần được nhập." });
     }
 
-    // Kiểm tra xem sản phẩm đã tồn tại trong danh sách bán (products)
     const existingProduct = await productModel.findOne({ name, author });
 
     if (existingProduct) {
-      // Nếu sản phẩm đã tồn tại, cập nhật số lượng
-      existingProduct.quantity += requestedQuantity; // Cộng thêm số lượng
-      existingProduct.totalQuantity += requestedQuantity; // Cộng thêm tổng số lượng
+      existingProduct.quantity += requestedQuantity; 
+      existingProduct.totalQuantity += requestedQuantity; 
 
-      // Nếu có giá mới (salePrice), cập nhật giá
       if (salePrice) {
         existingProduct.price = salePrice;
       }
@@ -165,18 +238,16 @@ const addProductForSale = async (req, res) => {
       return res.status(200).json({ success: true, message: "Sản phẩm đã tồn tại, số lượng đã được cập nhật.", product: existingProduct });
     }
 
-    // Nếu sản phẩm chưa tồn tại trong danh sách bán, kiểm tra trong kho
     const stockItem = await stockModel.findOne({ name, author });
 
     if (!stockItem || stockItem.quantity < requestedQuantity) {
       return res.status(400).json({ success: false, message: "Không đủ số lượng trong kho để bán." });
     }
 
-    let imageUrl = stockItem.image || "https://via.placeholder.com/150"; // Giữ ảnh từ kho
-    const price = stockItem.price; // Lấy giá từ sản phẩm trong kho
-    const publisher = stockItem.publisher; // Thêm publisher
+    let imageUrl = stockItem.image || "https://via.placeholder.com/150"; 
+    const price = stockItem.price; 
+    const publisher = stockItem.publisher; 
 
-    // Nếu có ảnh mới, upload lên Cloudinary
     if (req.file) {
       try {
         const uploadResult = await cloudinary.uploader.upload(req.file.path, { resource_type: "image" });
@@ -186,26 +257,23 @@ const addProductForSale = async (req, res) => {
       }
     }
 
-    // Trừ số lượng trong kho
     stockItem.quantity -= requestedQuantity;
     await stockItem.save();
 
-    // Sử dụng giá salePrice nếu có, nếu không thì dùng giá gốc từ kho
     const finalPrice = salePrice ? salePrice : price;
 
-    // Thêm vào danh sách sản phẩm để bán
     const newProduct = new productModel({
       name,
       description,
       author,
       category,
-      price: finalPrice, // Sử dụng giá mới (salePrice)
+      price: finalPrice, 
       quantity: requestedQuantity,
       totalQuantity: requestedQuantity,
       image: imageUrl,
       date: new Date(),
       popular: popular === "true" ? true : false,
-      publisher, // Thêm publisher
+      publisher,
     });
 
     await newProduct.save();
@@ -263,7 +331,6 @@ const deleteProduct = async (req, res) => {
   try {
     const { id } = req.body;
 
-    // Validate ID
     if (!id) {
       return res.status(400).json({ success: false, message: "Mã sách là bắt buộc." });
     }
@@ -285,7 +352,6 @@ const getAllProduct = async (req, res) => {
   try {
     const { category } = req.query;
 
-    // Optional filter by category
     const filter = category ? { category } : {};
     const products = await productModel.find(filter);
 
@@ -297,9 +363,8 @@ const getAllProduct = async (req, res) => {
 };
 
 const getProductById = async (req, res) => {
-  const { productId } = req.body; // Get ID from URL parameters
+  const { productId } = req.body; 
   try {
-    // Validate ID
     if (!productId) {
       return res.status(400).json({ success: false, message: "Mã sách là bắt buộc." });
     }
@@ -317,13 +382,11 @@ const getProductById = async (req, res) => {
   }
 };
 
-// Cập nhật thông tin sản phẩm
 const updateProduct = async (req, res) => {
   try {
-    const { id } = req.params; // Lấy ID sản phẩm từ URL
-    const { name, description, author, category, price, popular, quantity, publisher } = req.body; // Các trường cần cập nhật
+    const { id } = req.params;
+    const { name, description, author, category, price, popular, quantity, publisher } = req.body; 
 
-    // Kiểm tra ID
     if (!id) {
       return res.status(400).json({
         success: false,
@@ -339,10 +402,9 @@ const updateProduct = async (req, res) => {
       });
     }
 
-    // Cập nhật các thông tin sản phẩm
     product.name = name || product.name;
     product.author = author || product.author;
-    product.publisher = publisher || product.publisher; // Cập nhật nhà sản xuất
+    product.publisher = publisher || product.publisher; 
     product.category = category || product.category;
     product.price = price || product.price;
     product.quantity = quantity || product.quantity;
@@ -382,18 +444,14 @@ const updateProduct = async (req, res) => {
 
       const oldQuantity = product.quantity || 0;
       const newQuantity = Number(quantity);
-
-      // Nếu là lần đầu cập nhật hoặc totalQuantity chưa được set
       if (!product.totalQuantity) {
         product.totalQuantity = newQuantity;
       } else {
-        // Nếu số lượng mới lớn hơn số lượng cũ, cộng thêm phần chênh lệch vào tổng
         if (newQuantity > oldQuantity) {
           product.totalQuantity += (newQuantity - oldQuantity);
         }
       }
 
-      // Cập nhật số lượng hiện tại
       product.quantity = newQuantity;
 
       console.log('New quantity:', product.quantity);
@@ -419,16 +477,16 @@ const updateProduct = async (req, res) => {
 const getProductSalesStats = async (req, res) => {
   try {
     const stats = await orderModel.aggregate([
-      { $unwind: "$items" }, // Decompose the items array into individual documents
+      { $unwind: "$items" },
       {
         $group: {
-          _id: "$items._id", // Group by product ID
-          name: { $first: "$items.name" }, // Get the product name
-          image: { $first: "$items.image" }, // Get the product image
-          totalSold: { $sum: "$items.quantity" }, // Sum the quantities sold
+          _id: "$items._id", 
+          name: { $first: "$items.name" }, 
+          image: { $first: "$items.image" }, 
+          totalSold: { $sum: "$items.quantity" },
         },
       },
-      { $sort: { totalSold: -1 } }, // Sort by total sold in descending order
+      { $sort: { totalSold: -1 } },
     ]);
 
     const totalProductsSold = stats.reduce((sum, product) => sum + product.totalSold, 0);
@@ -440,4 +498,22 @@ const getProductSalesStats = async (req, res) => {
   }
 };
 
-export { createProduct, deleteProduct, getAllProduct, updateStockItem, getSaleProductList, getProductById, updateProduct, addToStock, addProductForSale, getStockList, deleteStockItem, getProductSalesStats };
+
+const getTrashImports = async (req, res) => {
+  try {
+    const trashImports = await importModel
+      .find({ isDeleted: true })
+      .sort({ deletedAt: -1 }); 
+
+    res.status(200).json({
+      success: true,
+      message: "Danh sách phiếu nhập trong thùng rác.",
+      imports: trashImports,
+    });
+  } catch (error) {
+    console.error("Lỗi khi lấy danh sách thùng rác:", error);
+    res.status(500).json({ success: false, message: "Lỗi server.", error: error.message });
+  }
+};
+
+export { createProduct, deleteProduct, getAllProduct, updateStockItem, getSaleProductList, getTrashImports, getProductById, updateProduct, addToStock, addProductForSale, getStockList, deleteStockItem, getProductSalesStats };

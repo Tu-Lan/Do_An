@@ -1,24 +1,20 @@
-// backend/controllers/categoryController.js
-
 import categoryModel from '../models/categoryModel.js';
-import cloudinary from '../config/cloudinary.js'; // Import đúng đối tượng cloudinary đã cấu hình
+import cloudinary from '../config/cloudinary.js';
 
 const createCategory = async (req, res) => {
   try {
     const { name } = req.body;
 
-    // Validate required fields
     if (!name) {
       return res.status(400).json({ success: false, message: 'Tên thể loại là bắt buộc.' });
     }
 
-    // Check if category already exists
     const existingCategory = await categoryModel.findOne({ name });
     if (existingCategory) {
       return res.status(409).json({ success: false, message: 'Thể loại này đã tồn tại.' });
     }
 
-    let imageUrl = 'https://via.placeholder.com/150'; // Default image
+    let imageUrl = 'https://via.placeholder.com/150';
 
     if (req.file) {
       try {
@@ -57,21 +53,17 @@ const updateCategory = async (req, res) => {
     const { id } = req.params;
     const { name } = req.body;
 
-    // Kiểm tra ID
     if (!id) {
       return res.status(400).json({ success: false, message: 'Tên thể loại sách là bắt buộc.' });
     }
 
-    // Tìm Category
     const category = await categoryModel.findById(id);
     if (!category) {
       return res.status(404).json({ success: false, message: 'Không tìm thấy thể loại sách.' });
     }
 
-    // Cập nhật tên nếu có
     if (name) category.name = name;
 
-    // Cập nhật ảnh nếu có
     if (req.file) {
       try {
         const uploadResult = await cloudinary.uploader.upload(req.file.path, { folder: 'categories' });
@@ -90,17 +82,14 @@ const updateCategory = async (req, res) => {
   }
 };
 
-// Hàm xóa Category
 const deleteCategory = async (req, res) => {
   try {
     const { id } = req.params;
 
-    // Kiểm tra ID
     if (!id) {
       return res.status(400).json({ success: false, message: 'Thể loại sách là bắt buộc.' });
     }
 
-    // Tìm và xóa Category
     const category = await categoryModel.findByIdAndDelete(id);
     if (!category) {
       return res.status(404).json({ success: false, message: 'Không tìm thấy thể loại sách.' });

@@ -42,9 +42,9 @@ const Shop = () => {
       filtered = filtered.filter((book) => {
         const lowerCaseSearch = search.toLowerCase();
         return (
-          book.name.toLowerCase().includes(lowerCaseSearch) ||  // Tìm kiếm theo tên sách
-          (book.author && book.author.toLowerCase().includes(lowerCaseSearch)) ||  // Tìm kiếm theo tên giả (nếu có)
-          (book.publisher && book.publisher.toLowerCase().includes(lowerCaseSearch)) // Tìm kiếm theo nhà sản xuất (nếu có)
+          book.name.toLowerCase().includes(lowerCaseSearch) || 
+          (book.author && book.author.toLowerCase().includes(lowerCaseSearch)) ||  
+          (book.publisher && book.publisher.toLowerCase().includes(lowerCaseSearch)) 
         );
       });
     }
@@ -93,7 +93,6 @@ const Shop = () => {
   return (
     <section className="max-padd-container bg-white">
       <div className="pt-28">
-        {/* search box */}
         <div className="w-full max-w-2xl flexCenter">
           <div className="inline-flex items-center justify-center bg-primary overflow-hidden w-full rounded-full p-4 px-5">
             <div className="text-lg cursor-pointer">
@@ -111,7 +110,6 @@ const Shop = () => {
             </div>
           </div>
         </div>
-        {/* Category filter */}
         <div className="mt-12 mb-16">
           <div className="flex justify-between items-center mb-4">
             <h4 className="h4 hidden sm:flex">Thể loại:</h4>
@@ -148,9 +146,7 @@ const Shop = () => {
           </div>
         </div>
 
-        {/* Book container */}
         <div className="mt-8">
-          {/* title and sort */}
           <div className="flexBetween !items-start gap-7 flex-wrap pb-16 max-sm:flexCenter text-center">
             <Title
               title1={"Các cuốn sách"}
@@ -170,7 +166,6 @@ const Shop = () => {
               </select>
             </div>
           </div>
-          {/* Book */}
           <div className="grid grid-cols-1 xs:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-8">
             {getPaginatedBooks().length > 0 ? (
               getPaginatedBooks().map((book) => <Item book={book} key={book._id} />)
@@ -179,9 +174,7 @@ const Shop = () => {
             )}
           </div>
         </div>
-        {/* Pagination */}
         <div className="flexCenter mt-14 mb-10 gap-4">
-          {/* Previous button */}
           <button
             disabled={currentPage === 1}
             onClick={() => setCurrentPage((prev) => prev - 1)}
@@ -190,7 +183,6 @@ const Shop = () => {
           >
             Previous
           </button>
-          {/* Page numbers */}
           {Array.from({ length: totalPages }, (_, index) => (
             <button
               key={index + 1}
@@ -201,7 +193,6 @@ const Shop = () => {
               {index + 1}
             </button>
           ))}
-          {/* Next button */}
           <button
             disabled={currentPage === totalPages}
             onClick={() => setCurrentPage((prev) => prev + 1)}

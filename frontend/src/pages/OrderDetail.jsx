@@ -5,7 +5,7 @@ import axios from "axios";
 import Footer from "../components/Footer";
 
 const OrderDetail = () => {
-  const { orderId } = useParams(); // Lấy orderId từ URL
+  const { orderId } = useParams();
   const { backend_url, token, currency } = useContext(ShopContext);
   const [order, setOrder] = useState(null);
 
@@ -32,7 +32,6 @@ const OrderDetail = () => {
       <div className="text-center">
         <h2 className="text-2xl font-bold mb-6">Chi tiết đơn hàng #{order._id}</h2>
 
-        {/* Thông tin khách hàng */}
         <div className="text-left">
           <h3 className="font-semibold mb-4">Thông tin khách hàng:</h3>
           <p>Tên: {order.address.firstName} {order.address.lastName}</p>
@@ -42,7 +41,6 @@ const OrderDetail = () => {
           <p>Trạng thái: {order.status}</p>
         </div>
 
-        {/* Danh sách sản phẩm */}
         <h3 className="font-semibold my-4">Danh sách sản phẩm:</h3>
         <ul>
           {order.items.map((item, index) => (
@@ -64,7 +62,6 @@ const OrderDetail = () => {
           ))}
         </ul>
 
-        {/* Tổng cộng */}
         <div className="flex justify-between mt-6">
           <p className="font-semibold text-lg">Tổng cộng: {order.amount} {currency}</p>
           <p className="text-gray-500">Ngày đặt hàng: {new Date(order.date).toLocaleDateString()}</p>

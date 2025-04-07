@@ -11,7 +11,7 @@ const Cart = () => {
   const [cartTotal, setCartTotal] = useState(getCartAmount());
 
   useEffect(() => {
-    setCartTotal(getCartAmount()); // Cập nhật tổng tiền mỗi khi giỏ hàng thay đổi
+    setCartTotal(getCartAmount());
   }, [cartItems]);
 
   useEffect(() => {
@@ -73,8 +73,6 @@ const Cart = () => {
             return null;
           })}
         </div>
-
-        {/* Hiển thị tổng tiền cập nhật */}
         <div className="mt-12 mb-8">
           <div className="max-w-md mx-auto">
             <CartTotal total={cartTotal} />

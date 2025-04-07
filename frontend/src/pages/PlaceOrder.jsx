@@ -19,7 +19,7 @@ const PlaceOrder = () => {
     delivery_charges,
   } = useContext(ShopContext);
 
-  const [method, setMethod] = useState("cod"); // Default is COD
+  const [method, setMethod] = useState("cod"); 
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
@@ -31,20 +31,19 @@ const PlaceOrder = () => {
     phone: "",
   });
 
-  const [addresses, setAddresses] = useState([]); // Store fetched addresses
-  const [selectedAddress, setSelectedAddress] = useState(null); // Selected address
+  const [addresses, setAddresses] = useState([]); 
+  const [selectedAddress, setSelectedAddress] = useState(null);
 
   useEffect(() => {
     if (!token) {
       toast.error("Bạn chưa đăng nhập. Vui lòng đăng nhập tài khoản...");
       navigate("/login");
     } else {
-      // Fetch user addresses
       axios.get(`${backend_url}/api/user/addresses`, {
         headers: { Authorization: `Bearer ${token}` },
       })
         .then(response => {
-          setAddresses(response.data.addresses); // Set addresses
+          setAddresses(response.data.addresses); 
         })
         .catch(error => {
           console.error("Lỗi khi lấy địa chỉ:", error);
@@ -54,7 +53,7 @@ const PlaceOrder = () => {
 
   const handleAddressSelect = (selectedOption) => {
     if (selectedOption) {
-      setSelectedAddress(selectedOption); // Store selected address
+      setSelectedAddress(selectedOption); 
       setFormData({
         firstName: selectedOption.firstName,
         lastName: selectedOption.lastName,
@@ -85,7 +84,6 @@ const PlaceOrder = () => {
     try {
       let orderItems = [];
 
-      // Ensure cart items are valid
       for (const itemId in cartItems) {
         if (cartItems[itemId] > 0) {
           const itemInfo = books.find((book) => book._id === itemId);
@@ -106,7 +104,6 @@ const PlaceOrder = () => {
       };
 
       if (method === "stripe") {
-        // Call backend to create Stripe session
         const response = await axios.post(
           `${backend_url}/api/order/stripe`,
           orderData,
@@ -114,13 +111,11 @@ const PlaceOrder = () => {
         );
 
         if (response.data.success) {
-          // Redirect to Stripe checkout page
           window.location.replace(response.data.session_url);
         } else {
           toast.error(response.data.message);
         }
       } else if (method === "cod") {
-        // Place order for COD
         const response = await axios.post(
           `${backend_url}/api/order/place`,
           orderData,
@@ -148,7 +143,6 @@ const PlaceOrder = () => {
           <div className="flex flex-1 flex-col gap-3 text-[95%]">
             <Title title1={"Địa chỉ"} title2={"nhận hàng"} title1Styles={"h3"} />
 
-            {/* Address Selection */}
             <Select
               options={addresses.map((address) => ({
                 label: `${address.firstName} ${address.lastName} - ${address.street}`,
@@ -159,7 +153,6 @@ const PlaceOrder = () => {
               isClearable
             />
 
-            {/* Form Fields (will be filled with selected address data) */}
             <input
               onChange={onChangeHandler}
               value={formData.firstName}
@@ -190,7 +183,6 @@ const PlaceOrder = () => {
               required
             />
             <CartTotal />
-            {/* Payment Method */}
             <div className="my-6">
               <h3 className="bold-20 mb-5">
                 Phương thức <span className="text-secondary">thanh toán</span>
@@ -211,7 +203,6 @@ const PlaceOrder = () => {
               </div>
             </div>
 
-            {/* Submit Button */}
             <button type="submit" className="btn-secondaryOne">Đặt hàng</button>
           </div>
         </div>

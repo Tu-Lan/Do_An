@@ -8,7 +8,7 @@ const userSchema = new mongoose.Schema({
   birth: { type: Date, required: true },
   image: { type: String, default: 'https://via.placeholder.com/150' },
   cartData: { type: Object, default: {} },
-  addresses: [{  // Thêm trường địa chỉ người dùng
+  addresses: [{ 
     firstName: String,
     lastName: String,
     street: String,
@@ -21,6 +21,6 @@ const userSchema = new mongoose.Schema({
 }, { minimize: false });
 
 
-const User = mongoose.models.User || mongoose.model('User', userSchema);  // Đảm bảo đã đăng ký đúng tên
+const User = mongoose.models.User || mongoose.model('User', userSchema);  
 
 export default User;

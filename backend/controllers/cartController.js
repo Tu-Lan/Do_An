@@ -24,10 +24,8 @@ const addToCart = async (req, res) => {
       return res.status(404).json({ success: false, message: "Không tìm thấy người dùng." });
     }
 
-    // Increment quantity if item already exists in cart
     user.cartData[itemId] = (user.cartData[itemId] || 0) + quantity;
 
-    // Ensure the cart quantity doesn't exceed stock
     if (user.cartData[itemId] > product.quantity) {
       user.cartData[itemId] = product.quantity;
       return res.status(400).json({

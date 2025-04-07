@@ -6,34 +6,28 @@ import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import upload from "../middleware/multer.js";
 
-// Hàm tạo token
 const createToken = (id, role) => {
   return jwt.sign({ id, role }, process.env.JWT_SECRET, { expiresIn: '1d' });
 };
 
-// Đăng nhập người dùng
 const handleUserLogin = async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    // Kiểm tra dữ liệu
     if (!email || !password) {
       return res.status(400).json({ success: false, message: "Email và mật khẩu là bắt buộc" });
     }
 
-    // Tìm user
     const user = await userModel.findOne({ email });
     if (!user) {
       return res.status(404).json({ success: false, message: "Không tìm thấy người dùng" });
     }
 
-    // So sánh mật khẩu
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
       return res.status(401).json({ success: false, message: "Sai mật khẩu" });
     }
 
-    // Trả về token
     const token = createToken(user._id, 'user');
     res.status(200).json({ success: true, token, userId: user._id });
   } catch (error) {
@@ -41,12 +35,10 @@ const handleUserLogin = async (req, res) => {
   }
 };
 
-// Đăng ký người dùng
 const handleUserRegister = async (req, res) => {
   try {
     const { name, email, password, gender, birth } = req.body;
 
-    // Kiểm tra dữ liệu đầu vào
     if (!name || !email || !password || !gender || !birth) {
       return res.status(400).json({ success: false, message: "Vui lòng điền đầy đủ thông tin." });
     }
@@ -54,18 +46,14 @@ const handleUserRegister = async (req, res) => {
     if (password.length < 8) {
       return res.status(400).json({ success: false, message: "Mật khẩu phải có ít nhất 8 ký tự." });
     }
-
-    // Kiểm tra email đã tồn tại chưa
     const existingUser = await userModel.findOne({ email });
     if (existingUser) {
       return res.status(409).json({ success: false, message: "Email đã tồn tại." });
     }
 
-    // Mã hóa mật khẩu
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
-    // Tạo người dùng mới
     const newUser = await userModel.create({
       name,
       email,
@@ -82,17 +70,14 @@ const handleUserRegister = async (req, res) => {
   }
 };
 
-// Đăng nhập admin
 const handleAdminLogin = async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    // Validate input
     if (!email || !password) {
       return res.status(400).json({ success: false, message: "Email và mật khẩu là bắt buộc" });
     }
 
-    // Check admin credentials
     if (email === process.env.ADMIN_EMAIL && password === process.env.ADMIN_PASS) {
       const token = createToken(email, 'admin');
       res.status(200).json({ success: true, token });
@@ -105,7 +90,6 @@ const handleAdminLogin = async (req, res) => {
   }
 };
 
-// Lấy tất cả người dùng (chỉ admin)
 const getAllUsers = async (req, res) => {
   try {
     const users = await userModel.find().select('-password');
@@ -119,7 +103,6 @@ const getAllUsers = async (req, res) => {
   }
 };
 
-// Lấy người dùng theo ID
 const getUserById = async (req, res) => {
   try {
     const { id } = req.params;
@@ -134,7 +117,6 @@ const getUserById = async (req, res) => {
   }
 };
 
-// Lấy thông tin người dùng hiện tại
 const getCurrentUserProfile = async (req, res) => {
   try {
     const userId = req.user.id;
@@ -197,7 +179,6 @@ const updateCurrentUserProfile = async (req, res) => {
       return res.status(404).json({ success: false, message: "Không tìm thấy người dùng." });
     }
 
-    // Nếu có mật khẩu mới, kiểm tra mật khẩu cũ
     if (newPassword) {
       if (!oldPassword) {
         return res.status(400).json({ success: false, message: "Cần nhập mật khẩu cũ để đổi mật khẩu." });
@@ -210,7 +191,6 @@ const updateCurrentUserProfile = async (req, res) => {
       user.password = await bcrypt.hash(newPassword, salt);
     }
 
-    // Xử lý upload ảnh
     if (req.file) {
       try {
         const uploadResult = await cloudinary.v2.uploader.upload(req.file.path, { resource_type: "image" });
@@ -221,7 +201,6 @@ const updateCurrentUserProfile = async (req, res) => {
       }
     }
 
-    // Cập nhật thông tin khác
     if (name) user.name = name;
     if (email) {
       const existingUser = await userModel.findOne({ email });
@@ -262,19 +241,16 @@ const adminUpdateUser = async (req, res) => {
     const { name, email, password, gender, birth } = req.body;
     let imageUrl = null;
 
-    // Tìm người dùng
     const user = await userModel.findById(id);
     if (!user) {
       return res.status(404).json({ success: false, message: "Không tìm thấy người dùng." });
     }
 
-    // Xử lý thay đổi mật khẩu nếu có yêu cầu
     if (password) {
       const salt = await bcrypt.genSalt(10);
       user.password = await bcrypt.hash(password, salt);
     }
 
-    // Xử lý upload ảnh mới nếu có
     if (req.file) {
       try {
         const uploadResult = await cloudinary.v2.uploader.upload(req.file.path, {
@@ -291,7 +267,6 @@ const adminUpdateUser = async (req, res) => {
       }
     }
 
-    // Cập nhật các trường khác (name, email)
     if (name) user.name = name;
     if (email) {
       const existingUser = await userModel.findOne({ email });
@@ -310,7 +285,6 @@ const adminUpdateUser = async (req, res) => {
   }
 };
 
-// Thêm địa chỉ
 const addAddress = async (req, res) => {
   const userId = req.user.id;
   const address = req.body;
@@ -327,7 +301,6 @@ const addAddress = async (req, res) => {
   }
 };
 
-// Cập nhật địa chỉ
 const updateAddress = async (req, res) => {
   const userId = req.user.id;
   const { addressId } = req.params;
@@ -345,7 +318,6 @@ const updateAddress = async (req, res) => {
   }
 };
 
-// Xóa địa chỉ
 const removeAddress = async (req, res) => {
   const userId = req.user.id;
   const { addressId } = req.params;
@@ -362,7 +334,6 @@ const removeAddress = async (req, res) => {
   }
 };
 
-// Lấy tất cả địa chỉ của người dùng
 const getAddresses = async (req, res) => {
   const userId = req.user.id;
 
@@ -410,7 +381,6 @@ const getUserStats = async (req, res) => {
   }
 };
 
-// Lấy danh sách người dùng đăng ký trong khoảng thời gian
 const getRegisteredUsers = async (req, res) => {
   try {
     const { startDate, endDate } = req.query;

@@ -20,6 +20,7 @@ import StockList from "./pages/StockList";
 import AdminOrderDetail from "./components/InvoiceDetail";
 import UserStats from "./pages/UserStats";
 import ProductSalesStats from "./pages/ProductSalesStats";
+import ImportList from "./components/ImportList";
 
 export const backend_url = import.meta.env.VITE_BACKEND_URL;
 export const currency = "đ";
@@ -41,11 +42,9 @@ const App = () => {
       ) : (
         <div className="bg-primary text-[#404040] min-h-screen">
           <div className="mx-auto max-w-[1440px] flex flex-col sm:flex-row">
-            {/* Sidebar */}
             <div className="flex-shrink-0">
               <SideBar setToken={setToken} />
             </div>
-            {/* Main Content */}
             <div className="flex-1 bg-white overflow-auto">
               <Routes>
                 <Route path="/" element={<Add token={token} />} />
@@ -54,6 +53,7 @@ const App = () => {
                 <Route path="/list-user" element={<ListUser token={token} />} />
                 <Route path="/list-stock" element={<StockList token={token} />} />
                 <Route path="/list" element={<List token={token} />} />
+                <Route path="/list-import" element={<ImportList token={token} />} />
                 <Route path="/list-category" element={<ListCategory token={token} />} />
                 <Route path="/orders" element={<Orders token={token} />} />
                 <Route path="/admin/order/:orderId" element={<AdminOrderDetail backend_url={backend_url} token={token} />} />

@@ -21,18 +21,18 @@ const ShopContextProvider = (props) => {
   const [userId, setUserId] = useState(localStorage.getItem("userId") || "");
   const [cartItems, setCartItems] = useState(() => {
     const savedCart = localStorage.getItem("cartItems");
-    return savedCart ? JSON.parse(savedCart) : {}; // Load cart from localStorage if available
+    return savedCart ? JSON.parse(savedCart) : {}; 
   });
 
   useEffect(() => {
     const savedCart = localStorage.getItem("cartItems");
     if (savedCart) {
-      setCartItems(JSON.parse(savedCart)); // Ensure cartItems is reloaded on app initialization
+      setCartItems(JSON.parse(savedCart)); 
     }
   }, []);
 
   useEffect(() => {
-    localStorage.setItem("cartItems", JSON.stringify(cartItems)); // Save cartItems to localStorage on change
+    localStorage.setItem("cartItems", JSON.stringify(cartItems)); 
   }, [cartItems]);
 
   useEffect(() => {
@@ -77,7 +77,7 @@ const ShopContextProvider = (props) => {
       toast.error("Bạn chưa đăng nhập.");
       return;
     }
-    console.log("Current Token:", token); // Debug
+    console.log("Current Token:", token); 
     try {
       const formData = new FormData();
       formData.append("name", name);
@@ -115,7 +115,6 @@ const ShopContextProvider = (props) => {
     }
   };
 
-  // Lấy danh sách danh mục
   const getCategoriesData = async () => {
     try {
       const response = await axios.get(`${backend_url}/api/category/list`);
@@ -130,11 +129,10 @@ const ShopContextProvider = (props) => {
     }
   };
 
-  // Lấy giỏ hàng của người dùng từ backend
   const getUserCart = async () => {
     if (!token) {
       const savedCart = localStorage.getItem("cartItems");
-      setCartItems(savedCart ? JSON.parse(savedCart) : {}); // Load cart from localStorage if not logged in
+      setCartItems(savedCart ? JSON.parse(savedCart) : {}); 
       return;
     }
 
@@ -170,7 +168,7 @@ const ShopContextProvider = (props) => {
       );
 
       if (response.data.success) {
-        setCartItems(response.data.cart || {}); // Cập nhật giỏ hàng với dữ liệu từ backend
+        setCartItems(response.data.cart || {}); 
         toast.success(response.data.message);
       } else {
         toast.error(response.data.message);
@@ -210,21 +208,19 @@ const ShopContextProvider = (props) => {
   useEffect(() => {
     const savedCart = localStorage.getItem("cartItems");
     if (savedCart) {
-      setCartItems(JSON.parse(savedCart)); // Load cart from localStorage
+      setCartItems(JSON.parse(savedCart)); 
     } else if (token) {
-      getUserCart(); // Load cart from backend if logged in
+      getUserCart(); 
     }
   }, [token]);
 
-  // Tính tổng số lượng sản phẩm trong giỏ hàng
   const getCartCount = () => {
     if (!cartItems || typeof cartItems !== "object") return 0;
     return Object.values(cartItems).reduce((total, quantityCart) => total + quantityCart, 0);
   };
 
-  // Tính tổng tiền giỏ hàng
   const getCartAmount = () => {
-    if (!cartItems || typeof cartItems !== "object" || !books.length) return 0; // Đảm bảo `books` có dữ liệu trước khi tính toán
+    if (!cartItems || typeof cartItems !== "object" || !books.length) return 0; 
 
     return Object.entries(cartItems).reduce((total, [itemId, quantityCart]) => {
       const item = books.find((book) => book._id === itemId);
@@ -234,10 +230,9 @@ const ShopContextProvider = (props) => {
 
   const updateQuantityCart = async (itemId, newQuantity) => {
     if (!token) {
-      // Update cart in localStorage for guest users
       setCartItems((prevItems) => {
         const updatedCart = { ...prevItems, [itemId]: newQuantity };
-        if (newQuantity === 0) delete updatedCart[itemId]; // Remove item if quantity is 0
+        if (newQuantity === 0) delete updatedCart[itemId]; 
         localStorage.setItem("cartItems", JSON.stringify(updatedCart));
         return updatedCart;
       });
@@ -255,7 +250,7 @@ const ShopContextProvider = (props) => {
         setCartItems((prevItems) => {
           const updatedCart = { ...prevItems, [itemId]: newQuantity };
           if (newQuantity === 0) delete updatedCart[itemId];
-          localStorage.setItem("cartItems", JSON.stringify(updatedCart)); // Save to localStorage
+          localStorage.setItem("cartItems", JSON.stringify(updatedCart)); 
           return updatedCart;
         });
         toast.success("Đã cập nhật giỏ hàng thành công.");

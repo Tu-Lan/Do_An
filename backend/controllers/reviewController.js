@@ -1,19 +1,17 @@
 import Review from '../models/reviewModel.js';
 import Product from '../models/productModel.js';
-import User from '../models/userModel.js'; // Import model User
+import User from '../models/userModel.js'; 
 
 export const addReview = async (req, res) => {
   try {
     const { productId, rating, comment } = req.body;
     const userId = req.user.id;
 
-    // Kiểm tra xem sản phẩm có tồn tại không
     const product = await Product.findById(productId);
     if (!product) {
       return res.status(404).json({ success: false, message: 'Không tìm thấy sản phẩm.' });
     }
 
-    // Tạo đánh giá mới
     const newReview = new Review({
       productId,
       userId,
@@ -58,7 +56,7 @@ export const deleteReview = async (req, res) => {
       return res.status(403).json({ success: false, message: 'Bạn không có quyền xóa đánh giá này.' });
     }
 
-    await Review.deleteOne({ _id: reviewId }); // Use deleteOne instead of remove
+    await Review.deleteOne({ _id: reviewId });
 
     res.status(200).json({ success: true, message: 'Đánh giá đã được xóa.' });
   } catch (error) {
@@ -83,7 +81,6 @@ export const updateReview = async (req, res) => {
       return res.status(403).json({ success: false, message: 'Bạn không có quyền chỉnh sửa đánh giá này.' });
     }
 
-    // Update review fields
     if (rating) review.rating = rating;
     if (comment) review.comment = comment;
 

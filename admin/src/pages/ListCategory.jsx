@@ -71,7 +71,6 @@ const ListCategory = ({ token }) => {
     <div className="px-2 sm:px-8 mt-4 sm:mt-14">
       <h2 className="text-xl font-bold mb-4 text-gray-800">Danh sách thể loại</h2>
 
-      {/* Thanh Tìm Kiếm */}
       <div className="mb-6">
         <input
           type="text"
@@ -88,7 +87,6 @@ const ListCategory = ({ token }) => {
         <h5>Sửa</h5>
         <h5>Xóa</h5>
       </div>
-      {/* Danh sách Category */}
       {filteredCategories.length === 0 ? (
         <div className="text-center py-4">
           <h5 className="text-lg font-semibold">

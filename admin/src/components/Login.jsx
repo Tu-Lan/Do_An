@@ -39,13 +39,10 @@ const Login = ({ setToken }) => {
 
   return (
     <section className='absolute top-0 left-0 h-full w-full'>
-      {/* container */}
       <div className='flex h-full w-full'>
-        {/* image right side */}
         <div className='w-1/2 hidden sm:block'>
           <img src={loginImg} alt='Login Illustration' className='object-cover h-full w-full' />
         </div>
-        {/* Form side */}
         <div className='flexCenter w-full sm:w-1/2'>
           <form
             onSubmit={onSubmitHandler}

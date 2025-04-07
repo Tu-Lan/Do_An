@@ -31,7 +31,6 @@ const StockList = ({ token }) => {
     fetchCategories();
   }, []);
 
-  // Lấy danh sách sản phẩm trong kho
   const fetchStock = async () => {
     try {
       const response = await axios.get(`${backend_url}/api/product/stock/list`, {
@@ -49,7 +48,6 @@ const StockList = ({ token }) => {
     }
   };
 
-  // Lấy danh sách thể loại
   const fetchCategories = async () => {
     try {
       const response = await axios.get(`${backend_url}/api/category/list`, {
@@ -67,7 +65,6 @@ const StockList = ({ token }) => {
     }
   };
 
-  // Mở modal chỉnh sửa thông tin sản phẩm
   const openEditModal = (stockItem) => {
     setSelectedStock(stockItem);
     setUpdatedDetails({
@@ -81,7 +78,6 @@ const StockList = ({ token }) => {
     setIsSaleModalOpen(false);
   };
 
-  // Đóng modal chỉnh sửa
   const closeEditModal = () => {
     setIsEditModalOpen(false);
     setSelectedStock(null);
@@ -94,7 +90,6 @@ const StockList = ({ token }) => {
     });
   };
 
-  // Chỉnh sửa thông tin sản phẩm
   const handleUpdateStockItem = async () => {
     try {
       const { name, author, publisher, price, quantity } = updatedDetails;
@@ -124,8 +119,6 @@ const StockList = ({ token }) => {
       toast.error("Không thể cập nhật thông tin sản phẩm.");
     }
   };
-
-  // Xoá sản phẩm khỏi kho
   const deleteStockItem = async (id) => {
     if (!window.confirm("Bạn có chắc chắn muốn xoá sản phẩm này khỏi kho?")) return;
 
@@ -147,15 +140,13 @@ const StockList = ({ token }) => {
     }
   };
 
-  // Mở modal bán sản phẩm
   const openSellModal = (stockItem) => {
     setSelectedStock(stockItem);
     setSaleDetails({ ...saleDetails, quantity: 1 });
     setIsSaleModalOpen(true);
-    setIsEditModalOpen(false); // Đảm bảo modal chỉnh sửa không hiển thị
+    setIsEditModalOpen(false); 
   };
 
-  // Đóng modal bán sản phẩm
   const closeSellModal = () => {
     setIsSaleModalOpen(false);
     setSelectedStock(null);
@@ -168,7 +159,6 @@ const StockList = ({ token }) => {
     });
   };
 
-  // Gửi yêu cầu bán sản phẩm
   const handleSellProduct = async () => {
     if (!selectedStock) return;
 
@@ -266,7 +256,6 @@ const StockList = ({ token }) => {
         </div>
       )}
 
-      {/* Modal Chỉnh sửa Sản Phẩm */}
       {isEditModalOpen && selectedStock && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center">
           <div className="bg-white p-6 rounded-lg shadow-lg w-96">
@@ -324,7 +313,6 @@ const StockList = ({ token }) => {
         </div>
       )}
 
-      {/* Modal Bán Sản Phẩm */}
       {isSaleModalOpen && selectedStock && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center">
           <div className="bg-white p-6 rounded-lg shadow-lg w-96">

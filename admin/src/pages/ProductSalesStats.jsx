@@ -6,7 +6,7 @@ import { ClipLoader } from "react-spinners";
 
 const ProductSalesStats = ({ token }) => {
   const [data, setData] = useState([]);
-  const [totalSold, setTotalSold] = useState(0); // State for total products sold
+  const [totalSold, setTotalSold] = useState(0);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -18,7 +18,7 @@ const ProductSalesStats = ({ token }) => {
 
         if (response.data.success) {
           setData(response.data.stats);
-          setTotalSold(response.data.totalProductsSold); // Set total products sold
+          setTotalSold(response.data.totalProductsSold); 
         } else {
           toast.error(response.data.message);
         }

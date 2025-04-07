@@ -10,7 +10,7 @@ const EditProduct = ({ token }) => {
 
   const [name, setName] = useState("");
   const [category, setCategory] = useState("");
-  const [categories, setCategories] = useState([]); // State to store category list
+  const [categories, setCategories] = useState([]); 
   const [description, setDescription] = useState("");
   const [author, setAuthor] = useState("");
   const [quantity, setQuantity] = useState("");
@@ -18,7 +18,7 @@ const EditProduct = ({ token }) => {
   const [popular, setPopular] = useState(false);
   const [image, setImage] = useState(null);
   const [previewImg, setPreviewImg] = useState("");
-  const [publisher, setPublisher] = useState(""); // Thêm publisher
+  const [publisher, setPublisher] = useState(""); 
 
   const fetchProductById = async () => {
     try {
@@ -35,7 +35,7 @@ const EditProduct = ({ token }) => {
         setQuantity(p.quantity);
         setPrice(p.price);
         setPopular(p.popular);
-        setPublisher(p.publisher); // Đặt lại giá trị cho publisher
+        setPublisher(p.publisher); 
         setPreviewImg(p.image);
       } else {
         toast.error(response.data.message);
@@ -50,7 +50,7 @@ const EditProduct = ({ token }) => {
     try {
       const response = await axios.get(`${backend_url}/api/category/list`);
       if (response.data.success) {
-        setCategories(response.data.categories); // Update state with category list
+        setCategories(response.data.categories);
       } else {
         toast.error(response.data.message);
       }
@@ -62,7 +62,7 @@ const EditProduct = ({ token }) => {
 
   useEffect(() => {
     fetchProductById();
-    fetchCategories(); // Fetch category list when component loads
+    fetchCategories(); 
   }, [id]);
 
   const handleSubmit = async () => {
@@ -80,7 +80,7 @@ const EditProduct = ({ token }) => {
       formData.append("quantity", quantity);
       formData.append("price", price);
       formData.append("popular", popular);
-      formData.append("publisher", publisher); // Gửi nhà sản xuất (publisher)
+      formData.append("publisher", publisher);
       if (image) {
         formData.append("image", image);
       }
@@ -131,7 +131,6 @@ const EditProduct = ({ token }) => {
       <div className="px-4 sm:px-8 md:px-16 lg:px-24 xl:px-32 py-8">
         <h2 className="text-xl font-semibold mb-6 text-gray-700">Chỉnh sửa thông tin sách</h2>
 
-        {/* Image preview */}
         {previewImg && (
           <img
             src={previewImg}
@@ -140,7 +139,6 @@ const EditProduct = ({ token }) => {
           />
         )}
 
-        {/* Input fields */}
         <div className="mb-6">
           <label className="block text-gray-600 font-medium">Tên sách</label>
           <input
@@ -196,7 +194,7 @@ const EditProduct = ({ token }) => {
             type="text"
             className="border p-4 w-full mt-2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             value={publisher}
-            onChange={(e) => setPublisher(e.target.value)}  // Thêm publisher
+            onChange={(e) => setPublisher(e.target.value)}  
             placeholder="Nhà xuất bản..."
           />
         </div>

@@ -12,14 +12,13 @@ const Login = () => {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [gender, setGender] = useState("Male"); // Giá trị mặc định
+  const [gender, setGender] = useState("Male"); 
   const [birth, setBirth] = useState("");
 
   const onSubmitHandler = async (event) => {
     event.preventDefault();
     try {
       if (currState === "Đăng ký") {
-        // Gửi yêu cầu đăng ký
         const response = await axios.post(`${backend_url}/api/user/register`, {
           name,
           email,
@@ -34,12 +33,11 @@ const Login = () => {
           setUserId(response.data.userId);
           localStorage.setItem("userId", response.data.userId);
           toast.success("Đăng ký thành công!");
-          navigate("/"); // Điều hướng sau khi đăng ký
+          navigate("/"); 
         } else {
           toast.error(response.data.message);
         }
       } else {
-        // Gửi yêu cầu đăng nhập
         const response = await axios.post(`${backend_url}/api/user/login`, {
           email,
           password,
@@ -51,7 +49,7 @@ const Login = () => {
           setUserId(response.data.userId);
           localStorage.setItem("userId", response.data.userId);
           toast.success("Đăng nhập thành công!");
-          navigate("/"); // Điều hướng sau khi đăng nhập
+          navigate("/"); 
         } else {
           toast.error(response.data.message);
         }
@@ -72,18 +70,16 @@ const Login = () => {
 
   useEffect(() => {
     if (token) {
-      navigate("/"); // Nếu đã đăng nhập, điều hướng về trang chính
+      navigate("/"); 
     }
   }, [token, navigate]);
 
   return (
     <section className="absolute top-0 left-0 h-full w-full z-50 bg-white">
       <div className="flex h-full flex-wrap">
-        {/* Image side */}
         <div className="w-1/2 hidden sm:block">
           <img src={loginImg} alt="LoginImg" className="object-cover aspect-square h-full w-full" />
         </div>
-        {/* Form side */}
         <div className="flexCenter w-full sm:w-1/2 relative">
           <div className="absolute top-4 left-8 cursor-pointer">
             <img

@@ -10,10 +10,8 @@ const Orders = ({ token }) => {
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
 
-  // State cho ô tìm kiếm
   const [searchTerm, setSearchTerm] = useState('');
 
-  // Lấy danh sách tất cả đơn hàng
   const fetchAllOrders = async () => {
     if (!token) {
       return null;
@@ -35,7 +33,6 @@ const Orders = ({ token }) => {
     }
   };
 
-  // Cập nhật trạng thái đơn hàng
   const statusHandler = async (event, orderId) => {
     try {
       const response = await axios.post(
@@ -52,7 +49,6 @@ const Orders = ({ token }) => {
     }
   };
 
-  // Lọc đơn hàng theo ngày
   const filterOrdersByDate = () => {
     if (!startDate || !endDate) {
       return orders;
@@ -65,7 +61,6 @@ const Orders = ({ token }) => {
     });
   };
 
-  // Lọc đơn hàng theo ô tìm kiếm
   const filterOrdersBySearchTerm = (ordersList) => {
     if (!searchTerm.trim()) {
       return ordersList;
@@ -91,7 +86,6 @@ const Orders = ({ token }) => {
     });
   };
 
-  // Đặt lại bộ lọc ngày
   const resetDateFilters = () => {
     setStartDate('');
     setEndDate('');
@@ -101,7 +95,6 @@ const Orders = ({ token }) => {
     fetchAllOrders();
   }, [token]);
 
-  // Gộp hai hàm lọc
   const filteredByDate = filterOrdersByDate();
   const finalFilteredOrders = filterOrdersBySearchTerm(filteredByDate);
 
@@ -109,7 +102,6 @@ const Orders = ({ token }) => {
     <div className="px-4 sm:px-8 mt-6 sm:mt-14">
       <h2 className="text-2xl font-semibold mb-6 text-gray-800">Danh sách đơn hàng</h2>
 
-      {/* Bộ lọc ngày */}
       <div className="flex gap-6 mb-6">
         <div className="flex-1">
           <label className="block text-sm font-medium text-gray-700">Ngày bắt đầu</label>
@@ -137,7 +129,6 @@ const Orders = ({ token }) => {
         </button>
       </div>
 
-      {/* Ô tìm kiếm */}
       <div className="mb-6">
         <label className="block text-sm font-medium text-gray-700 mb-1">Tìm kiếm</label>
         <input
@@ -160,12 +151,10 @@ const Orders = ({ token }) => {
                 key={order._id}
                 className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-[0.5fr_2fr_1fr_0.5fr_1fr] gap-6 items-start p-6 bg-white rounded-lg shadow-lg"
               >
-                {/* Icon Section */}
                 <div className="hidden xl:flex items-center justify-center ring-1 ring-slate-200 rounded bg-blue-100 p-4">
                   <TfiPackage className="text-3xl text-blue-500" />
                 </div>
 
-                {/* Order Details */}
                 <div className="space-y-3">
                   <div className="flex flex-wrap gap-2">
                     <span className="font-medium text-gray-700">Sách:</span>
@@ -191,7 +180,6 @@ const Orders = ({ token }) => {
                   </p>
                 </div>
 
-                {/* Payment and Date Details */}
                 <div className="space-y-3">
                   <p>
                     <span className="font-medium text-gray-700">Tổng sách:</span>{' '}
@@ -211,13 +199,11 @@ const Orders = ({ token }) => {
                   </p>
                 </div>
 
-                {/* Price */}
                 <div className="font-medium text-gray-700">
                   <span>Giá:</span> {order.amount}
                   {currency}
                 </div>
 
-                {/* Status Dropdown */}
                 <div className="space-y-3">
                   <Link
                     to={`/admin/order/${order._id}`}

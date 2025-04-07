@@ -2,8 +2,8 @@ import { useState, useEffect, useContext, useRef } from "react";
 import { ShopContext } from "../context/ShopContext";
 import axios from "axios";
 import { toast } from "react-toastify";
-import tt from "@tomtom-international/web-sdk-maps"; // Import TomTom Maps SDK
-import "@tomtom-international/web-sdk-maps/dist/maps.css"; // Import CSS của TomTom Maps
+import tt from "@tomtom-international/web-sdk-maps"; 
+import "@tomtom-international/web-sdk-maps/dist/maps.css";
 
 const AddressManager = () => {
   const { token, backend_url, navigate } = useContext(ShopContext);
@@ -19,12 +19,12 @@ const AddressManager = () => {
     country: "",
   });
   const [editingAddressId, setEditingAddressId] = useState(null);
-  const [mapCenter, setMapCenter] = useState({ lat: 21.0285, lon: 105.8542 }); // Default to Hanoi
+  const [mapCenter, setMapCenter] = useState({ lat: 21.0285, lon: 105.8542 }); 
   const [searchInput, setSearchInput] = useState("");
   const mapElement = useRef(null);
   const mapInstance = useRef(null);
   const markerRef = useRef(null);
-  const [activeTab, setActiveTab] = useState("edit-user"); // Quản lý tab hiện tại
+  const [activeTab, setActiveTab] = useState("edit-user"); 
 
   const TOMTOM_API_KEY = import.meta.env.VITE_TOMTOM_API_KEY;
 
@@ -147,7 +147,6 @@ const AddressManager = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Navigation */}
       <nav className="bg-white shadow-sm">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
@@ -173,14 +172,11 @@ const AddressManager = () => {
         </div>
       </nav>
 
-      {/* Main Content */}
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Add Address Form */}
         <div className="bg-white p-6 sm:p-8 rounded-lg shadow mb-8">
           <h2 className="text-2xl font-bold text-gray-900 mb-6">{editingAddressId ? "Cập nhật địa chỉ" : "Thêm địa chỉ mới"}</h2>
           <form onSubmit={handleAddressSubmit} className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {/* First Name */}
               <div className="space-y-2">
                 <label className="block text-sm font-medium text-gray-700">Họ</label>
                 <input
@@ -193,7 +189,6 @@ const AddressManager = () => {
                 />
               </div>
 
-              {/* Last Name */}
               <div className="space-y-2">
                 <label className="block text-sm font-medium text-gray-700">Tên</label>
                 <input
@@ -206,7 +201,6 @@ const AddressManager = () => {
                 />
               </div>
 
-              {/* Phone */}
               <div className="space-y-2">
                 <label className="block text-sm font-medium text-gray-700">Số điện thoại</label>
                 <input
@@ -221,7 +215,6 @@ const AddressManager = () => {
               </div>
             </div>
 
-            {/* Map */}
             <div className="space-y-2">
               <label className="block text-sm font-medium text-gray-700">Chọn vị trí trên bản đồ</label>
               <div
@@ -231,7 +224,6 @@ const AddressManager = () => {
               <p className="text-sm text-gray-600 mt-2">Địa chỉ: {searchInput || "Vui lòng chọn vị trí trên bản đồ"}</p>
             </div>
 
-            {/* Submit Button */}
             <div className="pt-4">
               <button
                 type="submit"
@@ -243,7 +235,6 @@ const AddressManager = () => {
           </form>
         </div>
 
-        {/* Address List */}
         <div className="bg-white p-6 sm:p-8 rounded-lg shadow">
           <h3 className="text-xl font-bold text-gray-900 mb-6">Danh sách địa chỉ</h3>
           {addresses.length === 0 ? (
@@ -258,7 +249,6 @@ const AddressManager = () => {
                   className="p-4 border rounded-lg hover:shadow-md transition-shadow"
                 >
                   <div className="flex flex-col md:flex-row justify-between items-start md:items-center">
-                    {/* Address Info */}
                     <div className="mb-2 md:mb-0">
                       <p className="font-medium">{address.firstName} {address.lastName}</p>
                       <p className="text-gray-600 text-sm">{address.street}</p>
@@ -268,7 +258,6 @@ const AddressManager = () => {
                       <p className="text-gray-600 text-sm">{address.phone}</p>
                     </div>
 
-                    {/* Action Buttons */}
                     <div className="flex gap-2 mt-2 md:mt-0">
                       <button
                         onClick={() => handleEditAddress(address)}

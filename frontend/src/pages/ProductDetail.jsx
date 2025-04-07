@@ -18,9 +18,9 @@ const ProductDetail = () => {
   const [rating, setRating] = useState(0);
   const [comment, setComment] = useState("");
   const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
-  const userId = localStorage.getItem("userId"); // Lấy userId từ localStorage
-  const [editMode, setEditMode] = useState(false); // Thêm trạng thái để kiểm tra chế độ sửa
-  const [editReviewId, setEditReviewId] = useState(null); // Lưu ID của đánh giá đang sửa
+  const userId = localStorage.getItem("userId"); 
+  const [editMode, setEditMode] = useState(false); 
+  const [editReviewId, setEditReviewId] = useState(null); 
 
   useEffect(() => {
     const foundProduct = books.find((book) => book._id === id);
@@ -66,10 +66,10 @@ const ProductDetail = () => {
   };
 
   const handleEditClick = (review) => {
-    setEditMode(true); // Bật chế độ sửa
-    setEditReviewId(review._id); // Lưu ID của đánh giá đang sửa
-    setRating(review.rating); // Điền xếp hạng vào form
-    setComment(review.comment); // Điền bình luận vào form
+    setEditMode(true); 
+    setEditReviewId(review._id); 
+    setRating(review.rating); 
+    setComment(review.comment);
   };
 
   const handleReviewSubmit = async (e) => {
@@ -81,7 +81,6 @@ const ProductDetail = () => {
 
     try {
       if (editMode) {
-        // Nếu đang ở chế độ sửa, gọi API cập nhật đánh giá
         const response = await axios.put(
           `${backend_url}/api/review/update/${editReviewId}`,
           { rating, comment },
@@ -90,13 +89,12 @@ const ProductDetail = () => {
 
         if (response.data.success) {
           toast.success("Đánh giá đã được cập nhật.");
-          setEditMode(false); // Tắt chế độ sửa
-          setEditReviewId(null); // Xóa ID của đánh giá đang sửa
+          setEditMode(false); 
+          setEditReviewId(null); 
         } else {
           toast.error("Không thể cập nhật đánh giá.");
         }
       } else {
-        // Nếu không ở chế độ sửa, gọi API thêm đánh giá mới
         const response = await axios.post(
           `${backend_url}/api/review/add`,
           { productId: product._id, rating, comment },
@@ -110,15 +108,16 @@ const ProductDetail = () => {
         }
       }
 
-      setRating(0); // Reset xếp hạng
-      setComment(""); // Reset bình luận
-      fetchReviews(product._id); // Tải lại danh sách đánh giá
+      setRating(0); 
+      setComment(""); 
+      fetchReviews(product._id); 
     } catch (error) {
       console.error("Error submitting review:", error);
       toast.error("Lỗi khi gửi đánh giá.");
     }
   };
 
+  // eslint-disable-next-line no-unused-vars
   const handleReviewUpdate = async (reviewId, updatedRating, updatedComment) => {
     try {
       const response = await axios.put(
@@ -162,13 +161,11 @@ const ProductDetail = () => {
     ? product.description.substring(0, 100) + "..."
     : product.description;
 
-  // Tính toán thông tin đánh giá
   const totalReviews = reviews.length;
   const averageRating = totalReviews > 0
     ? (reviews.reduce((sum, review) => sum + review.rating, 0) / totalReviews).toFixed(1)
     : 0;
 
-  // Tính tỷ lệ phần trăm cho từng mức sao
   const ratingCounts = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 };
   reviews.forEach((review) => {
     ratingCounts[review.rating] += 1;
@@ -276,7 +273,6 @@ const ProductDetail = () => {
           </article>
         </div>
 
-        {/* Form đánh giá */}
         <div className="mt-10">
           <h3 className="text-2xl font-bold mb-4">Viết đánh giá</h3>
           <form onSubmit={handleReviewSubmit} className="flex flex-col gap-4">
@@ -304,16 +300,14 @@ const ProductDetail = () => {
               type="submit"
               className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
             >
-              {editMode ? "Cập nhật đánh giá" : "Gửi đánh giá"} {/* Thay đổi nút dựa trên chế độ */}
+              {editMode ? "Cập nhật đánh giá" : "Gửi đánh giá"} 
             </button>
           </form>
         </div>
 
-        {/* Tổng quan đánh giá và danh sách đánh giá */}
         <div className="mt-10">
           <h3 className="text-2xl font-bold mb-4">Đánh giá</h3>
 
-          {/* Tổng quan đánh giá */}
           <div className="bg-white p-4 rounded-lg shadow-sm mb-6">
             <h4 className="text-lg font-semibold mb-2">Đánh giá sản phẩm</h4>
             <div className="flex items-center gap-4">
@@ -345,7 +339,6 @@ const ProductDetail = () => {
             </div>
           </div>
 
-          {/* Danh sách đánh giá */}
           {reviews.length === 0 ? (
             <p>Chưa có đánh giá nào.</p>
           ) : (
@@ -360,11 +353,10 @@ const ProductDetail = () => {
                   activeColor="#ffd700"
                 />
                 <p>{review.comment}</p>
-                {/* Hiển thị nút Sửa và Xóa nếu userId của đánh giá khớp với user hiện tại */}
                 {review.userId?._id === userId && (
                   <div className="flex gap-2">
                     <button
-                      onClick={() => handleEditClick(review)} // Khi nhấn "Sửa", điền dữ liệu vào form
+                      onClick={() => handleEditClick(review)} 
                       className="text-blue-500"
                     >
                       Sửa
@@ -382,7 +374,6 @@ const ProductDetail = () => {
           )}
         </div>
 
-        {/* Gợi ý sản phẩm cùng thể loại */}
         {relatedProducts.length > 0 && (
           <div className="mt-10 pb-10">
             <h3 className="text-2xl font-bold mb-6 text-gray-800 text-center md:text-left">

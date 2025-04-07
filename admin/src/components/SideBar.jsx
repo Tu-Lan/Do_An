@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { BiSolidCategory } from 'react-icons/bi';
 import { ImStatsDots } from 'react-icons/im';
 import { IoIosAddCircle, IoIosListBox } from 'react-icons/io';
-import { FaBars, FaBook, FaBookMedical } from 'react-icons/fa';
+import { FaBars, FaBook, FaBookMedical, FaFileImport } from 'react-icons/fa';
 import { AiOutlineDown, AiOutlineUp } from 'react-icons/ai';
+import { RiImportFill } from "react-icons/ri";
 import { FaRegUser, FaShoppingCart } from "react-icons/fa";
 import { Link, NavLink } from 'react-router-dom';
 import Logo from '../assets/logo.png';
@@ -34,29 +35,22 @@ const SideBar = ({ setToken }) => {
   const renderDropdownArrow = (isOpen) => (
     isOpen ? <AiOutlineUp size={16} /> : <AiOutlineDown size={16} />
   );
-
   return (
     <div className="flex">
-      {/* Mobile Toggle Button */}
       <button onClick={toggleMenu} className="p-4 sm:hidden">
         <FaBars size={24} />
       </button>
-
-      {/* Sidebar */}
       <div
         className={`fixed top-0 left-0 bg-white h-full w-64 z-50 transition-transform ${isMenuOpen ? 'translate-x-0' : '-translate-x-full'
           } sm:translate-x-0 sm:relative`}
       >
         <div className="flex flex-col h-full overflow-y-auto">
-          {/* Logo */}
           <div className="p-4 border-b">
             <Link to="/" className="flex items-center gap-4">
               <img src={Logo} alt="Logo" className="w-8 h-8" />
               <span className="text-lg font-bold">Tri Thức</span>
             </Link>
           </div>
-
-          {/* Menu Items */}
           <div className="flex-1 flex flex-col">
             <ul>
               <li>
@@ -121,6 +115,9 @@ const SideBar = ({ setToken }) => {
                 {renderNavLink('/orders', <FaShoppingCart size={20} />, 'Đơn hàng')}
               </li>
               <li>
+                {renderNavLink('/list-import', <RiImportFill size={20} />, 'Danh sách phiếu nhập')}
+              </li>
+              <li>
                 <div
                   className="p-4 flex items-center justify-between hover:bg-gray-100 cursor-pointer"
                   onClick={() => toggleDropdown('thongKe')}
@@ -141,8 +138,6 @@ const SideBar = ({ setToken }) => {
               </li>
             </ul>
           </div>
-
-          {/* Logout Button */}
           <div className="p-4 border-t">
             <button
               onClick={() => setToken('')}
@@ -153,8 +148,6 @@ const SideBar = ({ setToken }) => {
           </div>
         </div>
       </div>
-
-      {/* Overlay for Mobile */}
       {isMenuOpen && (
         <div
           className="fixed inset-0 bg-black opacity-50 z-40 sm:hidden"

@@ -22,7 +22,6 @@ const NewArrivals = () => {
   return (
     <section className="max-padd-container py-16 bg-white">
       <Title title1={"Hàng"} title2={'mới về'} titleStyles={'pb-10'} paraStyles={'!block'}/>
-      {/* Swiper */}
       <Swiper
         autoplay={{
           delay: 3500,

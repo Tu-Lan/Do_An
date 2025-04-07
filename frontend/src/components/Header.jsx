@@ -12,8 +12,8 @@ const Header = () => {
   const [cartQuantity, setCartQuantity] = useState(getCartCount());
   const [active, setActive] = useState(false);
   const [menuOpened, setMenuOpened] = useState(false);
-  const [isMenuOpen, setIsMenuOpen] = useState(false); // State để kiểm soát menu User
-  const menuRef = useRef(null); // Ref để theo dõi click ngoài
+  const [isMenuOpen, setIsMenuOpen] = useState(false); 
+  const menuRef = useRef(null); 
 
   useEffect(() => {
     setCartQuantity(getCartCount());
@@ -34,7 +34,6 @@ const Header = () => {
     };
   }, [menuOpened]);
 
-  // Đóng menu khi click ra ngoài
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (menuRef.current && !menuRef.current.contains(event.target)) {
@@ -63,13 +62,11 @@ const Header = () => {
         className={`${active ? "bg-white py-2 shadow-sm" : "bg-primary py-3"
           } max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between transition-all duration-300`}
       >
-        {/* Logo */}
         <Link to="/" className="flex items-center">
           <img src={logo} alt="Shop Logo" height={36} width={36} className="hidden sm:block mr-2" />
           <span className="text-lg font-bold text-gray-800">Tri Thức</span>
         </Link>
 
-        {/* Navbar */}
         <nav
           className={`${menuOpened
             ? "fixed inset-0 bg-white flex flex-col gap-6 p-6 z-50"
@@ -84,12 +81,9 @@ const Header = () => {
           />
         </nav>
 
-        {/* Right Side */}
         <div className="flex items-center gap-4">
-          {/* Menu Button (Mobile) */}
           <CgMenuLeft onClick={toggleMenu} className="text-2xl xl:hidden cursor-pointer" />
 
-          {/* Cart Icon */}
           <Link to="/cart" className="relative">
             <RiShoppingBag4Line className="text-[33px] bg-secondary text-primary p-2 rounded-full" />
             {cartQuantity > 0 && (
@@ -101,14 +95,11 @@ const Header = () => {
             )}
           </Link>
 
-          {/* User Section */}
           <div className="relative" ref={menuRef}>
             {token ? (
               <>
-                {/* Nhấn vào icon để mở menu */}
                 <TbUserCircle className="text-[29px] cursor-pointer" onClick={() => setIsMenuOpen(!isMenuOpen)} />
 
-                {/* Menu User */}
                 {isMenuOpen && (
                   <ul className="absolute right-0 top-10 bg-white shadow-md rounded-md p-2 w-40 ring-1 ring-gray-200">
                     <li onClick={() => navigate("/orders")} className="p-2 hover:bg-gray-100 cursor-pointer">

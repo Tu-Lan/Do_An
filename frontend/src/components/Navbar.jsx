@@ -13,7 +13,6 @@ const Navbar = ({ containerStyles, toggleMenu, menuOpened }) => {
   ]
   return (
     <nav className={containerStyles}>
-      {/* close button inside navbar */}
       {menuOpened && (
         <>
           <FaRegWindowClose onClick={toggleMenu} className='text-xl self-end cursor-pointer relative left-8' />

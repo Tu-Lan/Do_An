@@ -102,8 +102,8 @@ const Orders = () => {
             </p>
             <p className="text-gray-500">Trạng thái:
               {(() => {
-                const normalizedStatus = order.status?.toLowerCase(); // Normalize status to lowercase
-                console.log("Normalized Order Status:", normalizedStatus); // Debugging log
+                const normalizedStatus = order.status?.toLowerCase();
+                console.log("Normalized Order Status:", normalizedStatus); 
                 switch (normalizedStatus) {
                   case "order placed":
                     return "Đã đặt hàng";
@@ -120,7 +120,7 @@ const Orders = () => {
                   case "shipping":
                     return "Đang vận chuyển";
                   default:
-                    return `Trạng thái không xác định (${order.status})`; // Include the unrecognized status in the message
+                    return `Trạng thái không xác định (${order.status})`; 
                 }
               })()}
             </p>
@@ -148,7 +148,6 @@ const Orders = () => {
               </p>
             </div>
             <div className="mt-4 flex gap-3">
-              {/* Hiển thị nút "Xem chi tiết" cho tất cả đơn hàng */}
               <Link to={`/order/${order.orderId}`} className="btn-primaryOne !px-2 !text-xs !py-1">
                 Xem chi tiết
               </Link>
@@ -162,7 +161,6 @@ const Orders = () => {
                 </button>
               )}
 
-              {/* Hiển thị nút "Xuất hóa đơn" chỉ khi trạng thái là "Đã giao" */}
               {order.status === "Delivered" && (
                 <button
                   onClick={() => downloadInvoice(order.orderId)}

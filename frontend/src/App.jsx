@@ -52,7 +52,6 @@ const App = () => {
             }
           />
         </Routes>
-        {/* <Footer/> */}
       </main>
     </ShopContextProvider>
 
