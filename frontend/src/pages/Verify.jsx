@@ -18,20 +18,25 @@ const Verify = () => {
         navigate("/login");
         return;
       }
+
       const response = await axios.post(
         `${backend_url}/api/order/verifyStripe`,
         { success, orderId },
         { headers: { Authorization: `Bearer ${token}` } }
       );
+
       if (response.data.success) {
+        toast.success("Thanh toán thành công!");
         setCartItems({});
         navigate('/orders');
       } else {
+        toast.error(response.data.message || "Thanh toán không thành công.");
         navigate('/');
       }
     } catch (error) {
-      console.log(error);
-      toast.error(error.message);
+      console.error("Error verifying payment:", error);
+      toast.error("Đã xảy ra lỗi khi xác minh thanh toán.");
+      navigate('/');
     }
   };
 

@@ -59,7 +59,7 @@ const Cart = () => {
                           </div>
                         </div>
                         <div className="flex items-center gap-4">
-                          <p className="text-xl font-bold text-blue-600">{item.price * itemCount}{currency}</p>
+                          <p className="text-xl font-bold text-blue-600">{(item.price * itemCount).toLocaleString('vi-VN')}{currency}</p>
                           <button onClick={() => updateQuantityCart(item._id, 0)} className="p-2 text-red-600 hover:bg-red-100 rounded-full">
                             <TbTrash className="text-xl" />
                           </button>
@@ -80,7 +80,7 @@ const Cart = () => {
               onClick={() => navigate('/place-order')}
               className="w-full mt-6 bg-blue-600 text-white py-3 px-6 rounded-lg font-medium hover:bg-blue-500"
             >
-              Thanh toán ({cartTotal}{currency})
+              Thanh toán ({cartTotal.toLocaleString('vi-VN')}{currency})
             </button>
           </div>
         </div>

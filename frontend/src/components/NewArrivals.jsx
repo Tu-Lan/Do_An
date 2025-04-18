@@ -33,19 +33,19 @@ const NewArrivals = () => {
         breakpoints={{
           400: {
             slidesPerView: 2,
-            spaceBetween: 30
+            spaceBetween: 10
           },
           700: {
             slidesPerView: 3,
-            spaceBetween: 30
+            spaceBetween: 10
           },
           1024: {
             slidesPerView: 4,
-            spaceBetween: 30
+            spaceBetween: 10
           },
           1200: {
             slidesPerView: 5,
-            spaceBetween: 30
+            spaceBetween: 10
           },
         }}
         modules={[Pagination, Autoplay]}

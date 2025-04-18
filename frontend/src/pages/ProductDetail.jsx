@@ -211,7 +211,7 @@ const ProductDetail = () => {
             <p className="text-sm my-2 font-semibold">Nhà sản xuất: {product.publisher}</p>
 
             <div className="flex gap-1">
-              <h5 className="text-md">Giá: {product.price}</h5>
+              <h5 className="text-md">Giá: {product.price.toLocaleString('vi-VN')}</h5>
               <p className="font-semibold">{currency}</p>
             </div>
             <p className="text-sm my-2">
@@ -401,7 +401,7 @@ const ProductDetail = () => {
                       {relatedProduct.name}
                     </h5>
                     <p className="text-black-500 font-medium text-center text-lg">
-                      {relatedProduct.price}{currency}
+                      {relatedProduct.price.toLocaleString('vi-VN')}{currency}
                     </p>
                   </Link>
 

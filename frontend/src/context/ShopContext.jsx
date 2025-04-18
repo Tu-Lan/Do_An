@@ -6,6 +6,33 @@ import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { toast } from "react-toastify";
 
+// Utility function to decode JWT token
+const decodeToken = (token) => {
+  try {
+    const base64Url = token.split('.')[1];
+    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+    const jsonPayload = decodeURIComponent(
+      atob(base64)
+        .split('')
+        .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+        .join('')
+    );
+    return JSON.parse(jsonPayload);
+  } catch (error) {
+    console.error("Error decoding token:", error);
+    return null;
+  }
+};
+
+// Utility function to check if token is expired
+const isTokenExpired = (token) => {
+  if (!token) return true;
+  const decoded = decodeToken(token);
+  if (!decoded || !decoded.exp) return true;
+  const currentTime = Math.floor(Date.now() / 1000); // Current time in seconds
+  return decoded.exp < currentTime;
+};
+
 export const ShopContext = createContext();
 
 const ShopContextProvider = (props) => {
@@ -21,18 +48,37 @@ const ShopContextProvider = (props) => {
   const [userId, setUserId] = useState(localStorage.getItem("userId") || "");
   const [cartItems, setCartItems] = useState(() => {
     const savedCart = localStorage.getItem("cartItems");
-    return savedCart ? JSON.parse(savedCart) : {}; 
+    return savedCart ? JSON.parse(savedCart) : {};
   });
 
+  // Function to handle logout
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("userId");
+    localStorage.removeItem("cartItems");
+    setToken("");
+    setUserId("");
+    setCartItems({});
+    setUserProfile(null);
+    toast.error("Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.");
+    navigate("/login");
+  };
+
+  // Validate token on initial load or token change
   useEffect(() => {
-    const savedCart = localStorage.getItem("cartItems");
-    if (savedCart) {
-      setCartItems(JSON.parse(savedCart)); 
+    const savedToken = localStorage.getItem("token");
+    if (savedToken) {
+      if (isTokenExpired(savedToken)) {
+        handleLogout();
+      } else {
+        setToken(savedToken);
+        setUserId(localStorage.getItem("userId") || "");
+      }
     }
   }, []);
 
   useEffect(() => {
-    localStorage.setItem("cartItems", JSON.stringify(cartItems)); 
+    localStorage.setItem("cartItems", JSON.stringify(cartItems));
   }, [cartItems]);
 
   useEffect(() => {
@@ -42,12 +88,7 @@ const ShopContextProvider = (props) => {
       (response) => response,
       (error) => {
         if (error.response?.status === 401) {
-          toast.error("Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.");
-          localStorage.removeItem("token");
-          localStorage.removeItem("userId");
-          setToken(null);
-          setUserId(null);
-          navigate("/login");
+          handleLogout();
         }
         return Promise.reject(error);
       }
@@ -56,7 +97,7 @@ const ShopContextProvider = (props) => {
     return () => {
       axiosInstance.interceptors.response.eject();
     };
-  }, [navigate, setToken, setUserId]);
+  }, [navigate]);
 
   const getProductsData = async () => {
     try {
@@ -72,12 +113,12 @@ const ShopContextProvider = (props) => {
       toast.error(error.message);
     }
   };
+
   const updateUserProfile = async (name, email, oldPassword, newPassword, image, gender, birth) => {
-    if (!token) {
-      toast.error("Bạn chưa đăng nhập.");
+    if (!token || isTokenExpired(token)) {
+      handleLogout();
       return;
     }
-    console.log("Current Token:", token); 
     try {
       const formData = new FormData();
       formData.append("name", name);
@@ -105,7 +146,7 @@ const ShopContextProvider = (props) => {
       if (response.data.success) {
         toast.success(response.data.message);
         setUserProfile(response.data.user);
-        navigate("/"); 
+        navigate("/");
       } else {
         toast.error(response.data.message);
       }
@@ -130,9 +171,8 @@ const ShopContextProvider = (props) => {
   };
 
   const getUserCart = async () => {
-    if (!token) {
-      const savedCart = localStorage.getItem("cartItems");
-      setCartItems(savedCart ? JSON.parse(savedCart) : {}); 
+    if (!token || isTokenExpired(token)) {
+      handleLogout();
       return;
     }
 
@@ -143,7 +183,7 @@ const ShopContextProvider = (props) => {
         { headers: { Authorization: `Bearer ${token}` } }
       );
       if (response.data.success) {
-        setCartItems(response.data.cart || {}); 
+        setCartItems(response.data.cart || {});
       } else {
         console.error("Trong giỏ hàng không có sản phẩm nào.");
       }
@@ -153,10 +193,9 @@ const ShopContextProvider = (props) => {
     }
   };
 
-
   const addToCart = async (itemId, quantityCart) => {
-    if (!token) {
-      toast.error("Bạn chưa đăng nhập.");
+    if (!token || isTokenExpired(token)) {
+      handleLogout();
       return;
     }
 
@@ -168,7 +207,7 @@ const ShopContextProvider = (props) => {
       );
 
       if (response.data.success) {
-        setCartItems(response.data.cart || {}); 
+        setCartItems(response.data.cart || {});
         toast.success(response.data.message);
       } else {
         toast.error(response.data.message);
@@ -178,39 +217,17 @@ const ShopContextProvider = (props) => {
       toast.error(error.response?.data?.message || "Đã xảy ra lỗi khi thêm vào giỏ hàng.");
     }
   };
-  useEffect(() => {
-    console.log("Saving cartItems to localStorage:", cartItems);
-    localStorage.setItem("cartItems", JSON.stringify(cartItems));
-  }, [cartItems]);
-
-
 
   useEffect(() => {
-    if (token && userId) {
-      // getUserCart();
-      
+    if (token && userId && !isTokenExpired(token)) {
       getCategoriesData();
     }
     getProductsData();
   }, [token, userId]);
 
-
   useEffect(() => {
-    const savedToken = localStorage.getItem("token");
-    const savedUserId = localStorage.getItem("userId");
-    if (savedToken && savedUserId) {
-      setToken(savedToken);
-      setUserId(savedUserId);
+    if (token && !isTokenExpired(token)) {
       fetchUserProfile();
-    }
-  }, [backend_url]);
-
-  useEffect(() => {
-    const savedCart = localStorage.getItem("cartItems");
-    if (savedCart) {
-      setCartItems(JSON.parse(savedCart)); 
-    } else if (token) {
-      getUserCart(); 
     }
   }, [token]);
 
@@ -220,7 +237,7 @@ const ShopContextProvider = (props) => {
   };
 
   const getCartAmount = () => {
-    if (!cartItems || typeof cartItems !== "object" || !books.length) return 0; 
+    if (!cartItems || typeof cartItems !== "object" || !books.length) return 0;
 
     return Object.entries(cartItems).reduce((total, [itemId, quantityCart]) => {
       const item = books.find((book) => book._id === itemId);
@@ -229,13 +246,8 @@ const ShopContextProvider = (props) => {
   };
 
   const updateQuantityCart = async (itemId, newQuantity) => {
-    if (!token) {
-      setCartItems((prevItems) => {
-        const updatedCart = { ...prevItems, [itemId]: newQuantity };
-        if (newQuantity === 0) delete updatedCart[itemId]; 
-        localStorage.setItem("cartItems", JSON.stringify(updatedCart));
-        return updatedCart;
-      });
+    if (!token || isTokenExpired(token)) {
+      handleLogout();
       return;
     }
 
@@ -250,7 +262,7 @@ const ShopContextProvider = (props) => {
         setCartItems((prevItems) => {
           const updatedCart = { ...prevItems, [itemId]: newQuantity };
           if (newQuantity === 0) delete updatedCart[itemId];
-          localStorage.setItem("cartItems", JSON.stringify(updatedCart)); 
+          localStorage.setItem("cartItems", JSON.stringify(updatedCart));
           return updatedCart;
         });
         toast.success("Đã cập nhật giỏ hàng thành công.");
@@ -263,8 +275,12 @@ const ShopContextProvider = (props) => {
     }
   };
 
-
   const fetchUserProfile = async () => {
+    if (!token || isTokenExpired(token)) {
+      handleLogout();
+      return;
+    }
+
     try {
       const response = await axios.get(`${backend_url}/api/user/profile`, {
         headers: { Authorization: `Bearer ${token}` },
@@ -280,7 +296,6 @@ const ShopContextProvider = (props) => {
       toast.error(error.response?.data?.message || "Đã xảy ra lỗi khi lấy thông tin.");
     }
   };
-
 
   const contextvalue = {
     books,

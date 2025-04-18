@@ -37,9 +37,9 @@ const Item = ({ book }) => {
           </button>
         </div>
         <p className="line-clamp-2 py-1">Thể loại: {book.category}</p>
-        <p className="line-clamp-2 py-1">Giá: {book.price}{currency}</p>
+        <p className="line-clamp-2 py-1">Giá: {book.price.toLocaleString('vi-VN')}{currency}</p>
         {/* <p className="line-clamp-2 py-1">Mô tả: {book.description}</p> */}
-        <p className="line-clamp-2 py-1">Tác giả: {book.author}</p>
+        <p className="line-clamp-1 py-1 truncate">Tác giả: {Array.isArray(book.author) ? book.author.join(', ') : book.author}</p>
         <p className="pt-1 text-sm font-semibold text-gray-600">
           {book.quantity > 0 ? `Còn: ${book.quantity}` : 'Hết hàng'}
         </p>

@@ -47,7 +47,9 @@ const SideBar = ({ setToken }) => {
         <div className="flex flex-col h-full overflow-y-auto">
           <div className="p-4 border-b">
             <Link to="/" className="flex items-center gap-4">
-              <img src={Logo} alt="Logo" className="w-8 h-8" />
+              <svg className="w-8 h-8 text-purple-600 hidden sm:block mr-2" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
+              </svg>
               <span className="text-lg font-bold">Tri Thức</span>
             </Link>
           </div>

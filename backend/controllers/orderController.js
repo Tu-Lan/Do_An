@@ -1,15 +1,15 @@
 import orderModel from "../models/orderModel.js";
 import userModel from "../models/userModel.js";
+import productModel from "../models/productModel.js";
 import Stripe from 'stripe';
 import pdfkit from 'pdfkit';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import productModel from "../models/productModel.js";
-
+import { dirname } from 'path';
 
 const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+const __dirname = dirname(__filename);
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
@@ -375,18 +375,30 @@ const verifyStripe = async (req, res) => {
   const { orderId, success, userId } = req.body;
   try {
     if (success === "true") {
-      await orderModel.findByIdAndUpdate(orderId, { payment: true })
-      await userModel.findByIdAndUpdate(userId, { payment: true })
+      const order = await orderModel.findById(orderId);
+      if (!order) {
+        return res.status(404).json({ success: false, message: "Đơn hàng không tìm thấy" });
+      }
+
+      if (order.payment) {
+        return res.status(400).json({ success: false, message: "Đơn hàng đã được thanh toán" });
+      }
+
+      order.payment = true;
+      await order.save();
+
+      await userModel.findByIdAndUpdate(userId, { payment: true });
+
       res.json({ success: true });
     } else {
       await orderModel.findByIdAndDelete(orderId);
-      res.json({ success: false });
+      res.json({ success: false, message: "Thanh toán không thành công, đơn hàng đã bị hủy" });
     }
   } catch (error) {
-    console.log(error);
-    res.json({ success: false, message: error.message });
+    console.error("Error verifying Stripe payment:", error);
+    res.status(500).json({ success: false, message: "Internal server error" });
   }
-}
+};
 
 const UpdateStatus = async (req, res) => {
   try {
