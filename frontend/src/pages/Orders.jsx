@@ -170,12 +170,6 @@ const Orders = () => {
                     Xuất hóa đơn
                   </button>
 
-                  <Link
-                    to={`/review/${order.orderId}`}
-                    className="btn-secondaryOne !px-1.5 !text-xs !py-1"
-                  >
-                    Đánh giá đơn hàng
-                  </Link>
                 </>
               )}
             </div>

@@ -17,6 +17,7 @@ const userSchema = new mongoose.Schema({
     zipcode: String,
     country: String,
     phone: String,
+    isDefault: { type: Boolean, default: false },
   }],
 }, { minimize: false });
 
