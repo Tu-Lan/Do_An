@@ -1,9 +1,9 @@
 import mongoose from 'mongoose';
 
 const reviewSchema = new mongoose.Schema({
-  productId: {
+  orderId: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'Product',
+    ref: 'Order',
     required: true,
   },
   userId: {

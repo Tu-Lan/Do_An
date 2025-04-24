@@ -11,10 +11,8 @@ const Navbar = ({ containerStyles, toggleMenu, menuOpened }) => {
     { to: '/shop', label: 'Sản phẩm', icon: <IoLibrary /> },
   ];
 
-  // Create a ref for the nav element
   const menuRef = useRef(null);
 
-  // Handle click outside
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (
@@ -26,10 +24,8 @@ const Navbar = ({ containerStyles, toggleMenu, menuOpened }) => {
       }
     };
 
-    // Add event listener
     document.addEventListener('mousedown', handleClickOutside);
 
-    // Clean up event listener
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
@@ -38,27 +34,27 @@ const Navbar = ({ containerStyles, toggleMenu, menuOpened }) => {
   return (
     <nav
       ref={menuRef}
-      className={`${menuOpened ? 'flex' : 'hidden'
-        } flex-col bg-white shadow-lg w-64 h-screen fixed top-0 left-0 z-50 p-4 ${containerStyles}`}
+      className={`${menuOpened ? 'flex flex-col bg-white shadow-lg w-64 h-screen fixed top-0 left-0 z-50 p-4' : ''} ${containerStyles}`}
     >
-      {/* Close Button */}
-      <FaRegWindowClose
-        onClick={toggleMenu}
-        className="text-2xl text-gray-600 hover:text-gray-800 absolute top-4 right-4 cursor-pointer transition-colors duration-200 md:hidden"
-      />
+      {menuOpened && (
+        <FaRegWindowClose
+          onClick={toggleMenu}
+          className="text-2xl text-gray-600 hover:text-gray-800 absolute top-4 right-4 cursor-pointer transition-colors duration-200 md:hidden"
+        />
+      )}
 
-      {/* Logo and Title */}
-      <Link to="/" className="flex items-center gap-2 mb-8 mt-4">
-        <svg className="w-8 h-8 text-purple-600" viewBox="0 0 24 24" fill="currentColor">
-          <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
-        </svg>
-        <h4 className="text-2xl font-bold text-purple-600">Tri Thức</h4>
-      </Link>
+      {menuOpened && (
+        <Link to="/" className="flex items-center gap-2 mb-8 mt-4">
+          <svg className="w-8 h-8 text-purple-600" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
+          </svg>
+          <h4 className="text-2xl font-bold text-purple-600">Tri Thức</h4>
+        </Link>
+      )}
 
-      {/* Navigation Items */}
-      <div className="flex-1">
+      <div className={menuOpened ? 'flex-1' : 'flex items-center'}>
         {navItems.map(({ to, label, icon }) => (
-          <div key={label} className="mb-2">
+          <div key={label} className={menuOpened ? 'mb-2' : 'mx-2'}>
             <NavLink
               to={to}
               className={({ isActive }) =>

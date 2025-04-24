@@ -16,6 +16,7 @@ import ShopContextProvider from "./context/ShopContext"
 import OrderDetail from "./pages/OrderDetail"
 import AddressManager from "./pages/AddressManager"
 import UserSettings from "./pages/UserSetting"
+import ReviewForm from "./pages/ReviewForm"
 
 const App = () => {
   return (
@@ -34,6 +35,7 @@ const App = () => {
           <Route path="/orders" element={<Orders />} />
           <Route path="/verify" element={<Verify />} />
           <Route path="/usersetting" element={<UserSettings />} />
+          <Route path="/review/:orderId" element={<ReviewForm />} />
           <Route path="/product/:id" element={<ProductDetail />} />
           <Route
             path="/edit-profile"
