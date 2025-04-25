@@ -528,6 +528,68 @@ const getOrderStats = async (req, res) => {
     res.json({ success: false, message: error.message });
   }
 };
+const getRevenueStats = async (req, res) => {
+  try {
+    const deliveredOrders = await orderModel
+      .find({ status: "delivery" })
+      .populate("items.product");
+
+    let totalRevenue = 0;
+    let totalProfit = 0;
+    let totalCost = 0;
+
+    deliveredOrders.forEach((order) => {
+      order.items.forEach((item) => {
+        const product = item.product;
+
+        if (!product) return; // nếu sản phẩm đã bị xoá
+
+        const quantity = item.quantity;
+        const purchasePrice = product.price || 0;
+        const sellingPrice = item.price || product.salePrice || 0;
+
+        const cost = purchasePrice * quantity;
+        const revenue = sellingPrice * quantity;
+        const profit = revenue - cost;
+
+        totalCost += cost;
+        totalRevenue += revenue;
+        totalProfit += profit;
+      });
+    });
+
+    res.json({
+      success: true,
+      stats: {
+        totalRevenue,
+        totalCost,
+        totalProfit,
+        totalOrders: deliveredOrders.length,
+      },
+    });
+  } catch (error) {
+    console.error("Lỗi khi lấy thống kê doanh thu:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+
+const getOrderCounts = async (req, res) => {
+  try {
+    const deliveredOrders = await orderModel.find({ status: "delivery" });
+
+    const totalOrders = deliveredOrders.length;
+    const totalProducts = deliveredOrders.reduce((acc, order) => {
+      const productQty = order.products.reduce((sum, p) => sum + p.quantity, 0);
+      return acc + productQty;
+    }, 0);
+
+    res.json({ success: true, totalOrders, totalProducts });
+  } catch (err) {
+    res.json({ success: false, message: err.message });
+  }
+};
+
 // const getOrderStats = async (req, res) => {
 //   try {
 //     const { startDate, endDate } = req.query;
@@ -692,4 +754,4 @@ const generateInvoice = async (req, res) => {
 };
 
 
-export { placeOrder,getOrderDetail, placeOrderStripe, allOrder, userOrders, verifyStripe, UpdateStatus, getOrderStats, generateInvoice, cancelOrder }
+export { placeOrder, getOrderDetail, placeOrderStripe, allOrder, userOrders, verifyStripe, UpdateStatus, getOrderStats, generateInvoice, cancelOrder, getRevenueStats, getOrderCounts }
