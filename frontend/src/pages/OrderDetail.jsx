@@ -4,6 +4,7 @@ import { ShopContext } from "../context/ShopContext";
 import axios from "axios";
 import Footer from "../components/Footer";
 import ReactStars from "react-rating-stars-component";
+import { toast } from "react-toastify";
 
 const OrderDetail = () => {
   const { orderId } = useParams();
@@ -29,6 +30,7 @@ const OrderDetail = () => {
         }
       } catch (error) {
         console.log(error);
+        // toast.error("Lỗi khi tải chi tiết đơn hàng.");
       }
     };
     fetchOrderDetail();
@@ -42,14 +44,36 @@ const OrderDetail = () => {
         { headers: { Authorization: `Bearer ${token}` } }
       );
       if (res.data.success) {
-        alert("Cảm ơn bạn đã đánh giá!");
+        toast.success("Cảm ơn bạn đã đánh giá!");
         setReview(res.data.review);
       } else {
-        alert(res.data.message || "Không thể gửi đánh giá.");
+        toast.error(res.data.message || "Không thể gửi đánh giá.");
       }
     } catch (err) {
       console.error(err);
-      alert("Lỗi gửi đánh giá.");
+      toast.error("Lỗi gửi đánh giá.");
+    }
+  };
+
+  const handleCancelOrder = async () => {
+    if (!window.confirm("Bạn có chắc muốn hủy đơn hàng này?")) return;
+
+    try {
+      const response = await axios.post(
+        `${backend_url}/api/order/cancel`,
+        { orderId },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      if (response.data.success) {
+        toast.success(response.data.message);
+        setOrder({ ...order, status: "Cancelled", refunded: true }); // Cập nhật trạng thái hoàn tiền trên UI
+      } else {
+        toast.error(response.data.message || "Không thể hủy đơn hàng.");
+      }
+    } catch (error) {
+      console.error("Error cancelling order:", error);
+      const message = error.response?.data?.message || "Lỗi khi hủy đơn hàng.";
+      toast.error(message);
     }
   };
 
@@ -121,6 +145,18 @@ const OrderDetail = () => {
               <span className="font-medium">Trạng thái:</span>{" "}
               {getStatusDisplay(order.status)}
             </p>
+            {order.paymentMethod === "Stripe" && (
+              <p className="text-gray-500">
+                Trạng thái hoàn tiền:{" "}
+                {order.refunded ? (
+                  <span className="text-green-600">
+                    Đã hoàn tiền (ID: {order.refundId}, Ngày: {new Date(order.refundDate).toLocaleDateString()})
+                  </span>
+                ) : (
+                  <span className="text-gray-600">Chưa hoàn tiền</span>
+                )}
+              </p>
+            )}
           </div>
         </div>
 
@@ -158,13 +194,24 @@ const OrderDetail = () => {
 
         <div className="flex flex-col sm:flex-row justify-between items-center bg-white p-6 rounded-xl shadow-sm mb-8">
           <p className="text-lg font-semibold text-gray-800">
-            Tổng cộng: {(order.items.reduce((total, item) => total + item.price * item.quantity, 0) +
-              delivery_charges).toLocaleString('vi-VN') }
+            Tổng cộng:{" "}
+            {(order.items.reduce((total, item) => total + item.price * item.quantity, 0) +
+              delivery_charges).toLocaleString("vi-VN")}{" "}
             {currency}
           </p>
-          <p className="text-gray-500 text-sm mt-2 sm:mt-0">
-            Ngày đặt hàng: {new Date(order.date).toLocaleDateString()}
-          </p>
+          <div className="flex flex-col sm:flex-row gap-4 mt-2 sm:mt-0">
+            <p className="text-gray-500 text-sm">
+              Ngày đặt hàng: {new Date(order.date).toLocaleDateString()}
+            </p>
+            {(order.status === "Order Placed" || order.status === "Order Confirmed") && (
+              <button
+                onClick={handleCancelOrder}
+                className="py-2 px-4 bg-red-600 text-white bosses font-semibold rounded-lg shadow-sm hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-600 transition"
+              >
+                Hủy đơn hàng
+              </button>
+            )}
+          </div>
         </div>
 
         {order.status.toLowerCase() === "delivered" && !review && (

@@ -14,6 +14,10 @@ const orderSchema = new mongoose.Schema({
   status: { type: String, required: true, default: 'Order Placed' },
   paymentMethod: { type: String, required: true },
   payment: { type: Boolean, required: true, default: false },
+  paymentIntentId: { type: String },
+  stripeSessionId: { type: String }, // Thêm trường để lưu session ID
+  refundId: { type: String },
+  refunded: { type: Boolean, default: false },
   date: { type: Number, required: true },
 }, { minimize: false });
 

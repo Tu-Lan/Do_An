@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom"; // Import Link
+import { Link } from "react-router-dom";
 import { useContext, useEffect, useState } from "react";
 import { ShopContext } from "../context/ShopContext";
 import axios from "axios";
@@ -29,6 +29,8 @@ const Orders = () => {
           paymentMethod: order.paymentMethod,
           date: order.date,
           items: order.items,
+          refunded: order.refunded, // Thêm trường refunded
+          refundId: order.refundId, // Thêm trường refundId (tùy chọn)
         }));
         setOrderData(orders.reverse());
       }
@@ -73,17 +75,22 @@ const Orders = () => {
 
         if (response.data.success) {
           alert("Đã hủy đơn hàng thành công!");
-          loadOrderData();
+          loadOrderData(); // Tải lại danh sách đơn hàng để cập nhật trạng thái
         } else {
-          alert(response.data.message);
+          alert(`Lỗi: ${response.data.message}`);
         }
       } catch (error) {
         console.error("Error cancelling order:", error);
-        alert("Lỗi hủy đơn hàng.");
+        alert("Lỗi hủy đơn hàng. Vui lòng thử lại sau.");
       }
     }
   };
-
+  const getImageUrl = (image) => {
+    if (!image) return "/fallback-image.png";
+    return image.startsWith("http") || image.startsWith("/")
+      ? image
+      : `/${image}`;
+  };
   useEffect(() => {
     loadOrderData();
   }, [token]);
@@ -96,14 +103,14 @@ const Orders = () => {
           <div key={index} className="bg-white p-4 mt-5 rounded-lg shadow">
             <h4 className="font-semibold text-lg">Số đơn hàng {orderData.length - index}</h4>
             <p className="text-gray-500">Ngày đặt: {new Date(order.date).toLocaleString()}</p>
-            <p className="text-gray-500">Phương thức thanh toán:
-              {order.paymentMethod === "Stripe" && "Visa"}
-              {order.paymentMethod === "cod" && "Tiền mặt"}
+            <p className="text-gray-500">
+              Phương thức thanh toán:{" "}
+              {order.paymentMethod === "Stripe" ? "Visa" : "Tiền mặt"}
             </p>
-            <p className="text-gray-500">Trạng thái:
+            <p className="text-gray-500">
+              Trạng thái:{" "}
               {(() => {
                 const normalizedStatus = order.status?.toLowerCase();
-                console.log("Normalized Order Status:", normalizedStatus); 
                 switch (normalizedStatus) {
                   case "order placed":
                     return "Đã đặt hàng";
@@ -120,35 +127,62 @@ const Orders = () => {
                   case "shipping":
                     return "Đang vận chuyển";
                   default:
-                    return `Trạng thái không xác định (${order.status})`; 
+                    return `Trạng thái không xác định (${order.status})`;
                 }
               })()}
             </p>
+            {order.paymentMethod === "Stripe" && (
+              <p className="text-gray-500">
+                Trạng thái hoàn tiền:{" "}
+                {order.refunded ? (
+                  <span className="text-green-600">
+                    Đã hoàn tiền (ID: {order.refundId})
+                  </span>
+                ) : (
+                  <span className="text-gray-600">Chưa hoàn tiền</span>
+                )}
+              </p>
+            )}
             <div className="mt-4">
               {order.items.map((item, i) => (
                 <div key={i} className="flex gap-4 border-b py-2">
-                  <img src={item.image} alt={item.name} width={55} className="object-cover aspect-square rounded" />
+                  <img
+                    src={getImageUrl(item.image)}
+                    alt={item.name}
+                    width={55}
+                    className="object-cover aspect-square rounded"
+                    onError={(e) => {
+                      e.currentTarget.src = "/fallback-image.png";
+                    }}
+                  />
                   <div>
                     <h5 className="font-medium">{item.name}</h5>
                     <p>
-                      Giá sản phẩm: {item.price.toLocaleString('vi-VN')}{currency}
+                      Giá sản phẩm: {item.price.toLocaleString("vi-VN")}
+                      {currency}
                     </p>
                     <p>Số lượng: {item.quantity}</p>
                   </div>
                 </div>
               ))}
               <p className="text-gray-500 mt-3">
-                Phí vận chuyển: {delivery_charges.toLocaleString('vi-VN')}{currency}
+                Phí vận chuyển: {delivery_charges.toLocaleString("vi-VN")}
+                {currency}
               </p>
               <p className="text-gray-700 font-semibold">
                 Tổng cộng:{" "}
-                {(order.items.reduce((total, item) => total + item.price * item.quantity, 0) +
-                  delivery_charges).toLocaleString('vi-VN')}
+                {(order.items.reduce(
+                  (total, item) => total + item.price * item.quantity,
+                  0
+                ) + delivery_charges).toLocaleString("vi-VN")}
                 {currency}
               </p>
             </div>
             <div className="mt-4 flex gap-3">
-              <Link to={`/order/${order.orderId}`} className="btn-primaryOne !px-2 !text-xs !py-1">
+              <Link
+                to={`/order/${order.orderId}`}
+                className="btn-primaryOne !px-2 !text-xs !py-1"
+              >
                 Xem chi tiết
               </Link>
 
@@ -162,15 +196,12 @@ const Orders = () => {
               )}
 
               {order.status === "Delivered" && (
-                <>
-                  <button
-                    onClick={() => downloadInvoice(order.orderId)}
-                    className="btn-primaryOne !px-1.5 !text-xs !py-1"
-                  >
-                    Xuất hóa đơn
-                  </button>
-
-                </>
+                <button
+                  onClick={() => downloadInvoice(order.orderId)}
+                  className="btn-primaryOne !px-1.5 !text-xs !py-1"
+                >
+                  Xuất hóa đơn
+                </button>
               )}
             </div>
           </div>
@@ -182,4 +213,3 @@ const Orders = () => {
 };
 
 export default Orders;
-

@@ -104,7 +104,7 @@ const ShopContextProvider = (props) => {
       const response = await axios.get(`${backend_url}/api/product/list`);
       if (response.data.success) {
         setBooks(response.data.products);
-        console.log("Sản phẩm đã được lấy thành công:", response.data.products);
+        // console.log("Sản phẩm đã được lấy thành công:", response.data.products);
       } else {
         toast.error(response.data.message);
       }
@@ -287,7 +287,7 @@ const ShopContextProvider = (props) => {
       });
       if (response.data.success) {
         setUserProfile(response.data.user);
-        console.log("Đã lấy thông tin người dùng:", response.data.user);
+        // console.log("Đã lấy thông tin người dùng:", response.data.user);
       } else {
         toast.error(response.data.message);
       }

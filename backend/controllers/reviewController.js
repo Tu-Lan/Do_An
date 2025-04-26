@@ -4,42 +4,28 @@ import Order from '../models/orderModel.js';
 export const addReview = async (req, res) => {
   try {
     const { orderId, rating, comment } = req.body;
-    const userId = req.user.id;  // Lấy ID người dùng từ JWT token
-
-    // Tìm đơn hàng
+    const userId = req.user.id; 
     const order = await Order.findById(orderId);
-
-    // Kiểm tra nếu đơn hàng không tồn tại
     if (!order) {
       return res.status(404).json({ success: false, message: 'Không tìm thấy đơn hàng.' });
     }
-
-    // Kiểm tra nếu người dùng có quyền đánh giá đơn hàng này
     if (!order.userId || order.userId.toString() !== userId) {
       return res.status(403).json({ success: false, message: 'Bạn không có quyền đánh giá đơn hàng này.' });
     }
-
-    // Kiểm tra trạng thái đơn hàng phải là "Delivered"
     if (order.status !== 'Delivered') {
       return res.status(400).json({ success: false, message: 'Chỉ có thể đánh giá đơn hàng đã hoàn thành.' });
     }
-
-    // Kiểm tra nếu đơn hàng đã được đánh giá rồi
     const existingReview = await Review.findOne({ orderId, userId });
     if (existingReview) {
       return res.status(400).json({ success: false, message: 'Bạn đã đánh giá đơn hàng này.' });
     }
-
-    // Tạo mới đánh giá
     const newReview = new Review({
       orderId,
       userId,
       rating,
       comment,
     });
-
     await newReview.save();
-
     res.status(201).json({ success: true, message: 'Đánh giá đã được thêm.', review: newReview });
   } catch (error) {
     console.error('Error adding review:', error);
@@ -49,14 +35,11 @@ export const addReview = async (req, res) => {
 
 export const getReviewByOrder = async (req, res) => {
   const { orderId } = req.params;
-
   try {
     const review = await Review.findOne({ orderId }).populate("userId", "name");
-
     if (!review) {
       return res.status(404).json({ success: false, message: "Không tìm thấy đánh giá cho đơn hàng này." });
     }
-
     res.status(200).json({ success: true, review });
   } catch (error) {
     console.error("Lỗi khi lấy đánh giá:", error);
@@ -65,25 +48,16 @@ export const getReviewByOrder = async (req, res) => {
 };
 export const getReviewsByProduct = async (req, res) => {
   const { productId } = req.params;
-
   try {
-    // Tìm các đơn hàng chứa sản phẩm với productId
     const orders = await Order.find({ "items._id": productId });
-
     if (!orders.length) {
       return res.status(404).json({ success: false, message: "Không tìm thấy đơn hàng nào chứa sản phẩm này." });
     }
-
-    // Lấy danh sách orderId
     const orderIds = orders.map(order => order._id);
-
-    // Tìm các đánh giá liên quan đến các đơn hàng này
     const reviews = await Review.find({ orderId: { $in: orderIds } }).populate("userId", "name");
-
     if (!reviews.length) {
       return res.status(404).json({ success: false, message: "Không tìm thấy đánh giá nào cho sản phẩm này." });
     }
-
     res.status(200).json({ success: true, reviews });
   } catch (error) {
     console.error("Lỗi khi lấy đánh giá theo sản phẩm:", error);
@@ -92,35 +66,28 @@ export const getReviewsByProduct = async (req, res) => {
 };
 export const getReviewsByUser = async (req, res) => {
   const { userId } = req.params;
-
   try {
     const reviews = await Review.find({ userId }).populate("orderId", "status productId");
-
     if (reviews.length === 0) {
       return res.status(404).json({ success: false, message: "Không có đánh giá nào của người dùng này." });
     }
-
     res.status(200).json({ success: true, reviews });
   } catch (error) {
     console.error("Lỗi khi lấy danh sách đánh giá của người dùng:", error);
     res.status(500).json({ success: false, message: "Lỗi server khi lấy danh sách đánh giá." });
   }
 };
-
 export const deleteReview = async (req, res) => {
   try {
     const { reviewId } = req.params;
     const userId = req.user.id;
-
     const review = await Review.findById(reviewId);
     if (!review) {
       return res.status(404).json({ success: false, message: 'Không tìm thấy đánh giá.' });
     }
-
     if (review.userId.toString() !== userId) {
       return res.status(403).json({ success: false, message: 'Bạn không có quyền xóa đánh giá này.' });
     }
-
     await Review.deleteOne({ _id: reviewId });
     res.status(200).json({ success: true, message: 'Đánh giá đã được xóa.' });
   } catch (error) {
@@ -134,19 +101,15 @@ export const updateReview = async (req, res) => {
     const { reviewId } = req.params;
     const { rating, comment } = req.body;
     const userId = req.user.id;
-
     const review = await Review.findById(reviewId);
     if (!review) {
       return res.status(404).json({ success: false, message: 'Không tìm thấy đánh giá.' });
     }
-
     if (review.userId.toString() !== userId) {
       return res.status(403).json({ success: false, message: 'Bạn không có quyền chỉnh sửa đánh giá này.' });
     }
-
     if (rating) review.rating = rating;
     if (comment) review.comment = comment;
-
     await review.save();
     res.status(200).json({ success: true, message: 'Đánh giá đã được cập nhật.', review });
   } catch (error) {

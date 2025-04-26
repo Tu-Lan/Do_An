@@ -1,5 +1,5 @@
-import { useContext, useEffect } from "react"
-import { ShopContext } from "../context/ShopContext"
+import { useContext, useEffect } from "react";
+import { ShopContext } from "../context/ShopContext";
 import { useSearchParams } from "react-router-dom";
 import axios from "axios";
 import { toast } from "react-toastify";
@@ -35,7 +35,8 @@ const Verify = () => {
       }
     } catch (error) {
       console.error("Error verifying payment:", error);
-      toast.error("Đã xảy ra lỗi khi xác minh thanh toán.");
+      const message = error.response?.data?.message || "Đã xảy ra lỗi khi xác minh thanh toán.";
+      toast.error(message);
       navigate('/');
     }
   };
@@ -44,11 +45,7 @@ const Verify = () => {
     verifyPayment();
   }, [token]);
 
-  return (
-    <div>
-      
-    </div>
-  )
-}
+  return <div>Loading...</div>;
+};
 
-export default Verify
+export default Verify;
