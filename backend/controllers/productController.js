@@ -479,10 +479,24 @@ const getProductSalesStats = async (req, res) => {
     const stats = await orderModel.aggregate([
       { $unwind: "$items" },
       {
+        $lookup: {
+          from: "products", 
+          localField: "items._id",
+          foreignField: "_id", 
+          as: "productInfo", 
+        },
+      },
+      {
+        $unwind: {
+          path: "$productInfo",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
         $group: {
-          _id: "$items._id", 
-          name: { $first: "$items.name" }, 
-          image: { $first: "$items.image" }, 
+          _id: "$items._id",
+          name: { $first: "$productInfo.name" }, 
+          image: { $first: "$productInfo.image" }, 
           totalSold: { $sum: "$items.quantity" },
         },
       },
