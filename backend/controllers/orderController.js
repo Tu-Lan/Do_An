@@ -51,7 +51,7 @@ const placeOrder = async (req, res) => {
       amount,
       paymentMethod,
       payment: false,
-      date: Date.now(),
+      date: new Date(),
     };
     const newOrder = new orderModel(orderData);
     await newOrder.save();
@@ -114,7 +114,7 @@ const placeOrderStripe = async (req, res) => {
       address,
       paymentMethod: "Stripe",
       payment: false,
-      date: Date.now(),
+      date: new Date(),
     };
     const newOrder = new orderModel(orderData);
     await newOrder.save();
@@ -673,42 +673,154 @@ const getOrderStats = async (req, res) => {
 
 const getRevenueStats = async (req, res) => {
   try {
-    const deliveredOrders = await orderModel
-      .find({ status: "Delivered" })
-      .populate("items.product");
-    let totalRevenue = 0;
-    let totalProfit = 0;
-    let totalCost = 0;
-    deliveredOrders.forEach((order) => {
-      order.items.forEach((item) => {
-        const product = item.product;
-        if (!product) return;
-        const quantity = item.quantity;
-        const purchasePrice = product.price || 0;
-        const sellingPrice = item.price || product.salePrice || 0;
-        const cost = purchasePrice * quantity;
-        const revenue = sellingPrice * quantity;
-        const profit = revenue - cost;
-        totalCost += cost;
-        totalRevenue += revenue;
-        totalProfit += profit;
-      });
-    });
+    const { week } = req.query; 
+
+    const matchConditions = { status: "Delivered" };
+
+    if (week) {
+      matchConditions.date = {
+        $gte: new Date(`${week.split("-")[0]}-01-01`), 
+        $lte: new Date(`${week.split("-")[0]}-12-31`),
+      };
+    }
+
+    const stats = await orderModel.aggregate([
+      { $match: matchConditions },
+      {
+        $addFields: {
+          date: {
+            $cond: {
+              if: { $eq: [{ $type: "$date" }, "double"] },
+              then: { $toDate: "$date" },
+              else: "$date",
+            },
+          },
+        },
+      },
+      { $unwind: "$items" },
+      {
+        $lookup: {
+          from: "products",
+          localField: "items._id",
+          foreignField: "_id",
+          as: "productInfo",
+        },
+      },
+      {
+        $unwind: {
+          path: "$productInfo",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $lookup: {
+          from: "stocks",
+          let: { productName: "$productInfo.name", productAuthor: "$productInfo.author" },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    { $eq: ["$name", "$$productName"] },
+                    { $eq: ["$author", "$$productAuthor"] },
+                  ],
+                },
+              },
+            },
+          ],
+          as: "stockInfo",
+        },
+      },
+      {
+        $unwind: {
+          path: "$stockInfo",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
+        $group: {
+          _id: {
+            week: {
+              $dateToString: {
+                format: "%Y-%U",
+                date: "$date",
+              },
+            },
+          },
+          weeklyRevenue: { $sum: "$amount" },
+          weeklyCost: {
+            $sum: {
+              $multiply: [
+                "$items.quantity",
+                {
+                  $cond: {
+                    if: { $ne: ["$stockInfo", null] },
+                    then: "$stockInfo.price",
+                    else: 0,
+                  },
+                },
+              ],
+            },
+          },
+          weeklyOrders: { $sum: 1 },
+        },
+      },
+      week ? { $match: { "_id.week": week } } : { $sort: { "_id.week": 1 } },
+      {
+        $group: {
+          _id: null,
+          totalRevenue: { $sum: "$weeklyRevenue" },
+          totalCost: { $sum: "$weeklyCost" },
+          totalOrders: { $sum: "$weeklyOrders" },
+          weeklyData: {
+            $push: {
+              week: "$_id.week",
+              revenue: "$weeklyRevenue",
+              cost: "$weeklyCost",
+              orders: "$weeklyOrders",
+            },
+          },
+        },
+      },
+      {
+        $project: {
+          totalRevenue: 1,
+          totalCost: 1,
+          totalProfit: { $subtract: ["$totalRevenue", "$totalCost"] },
+          totalOrders: 1,
+          weeklyData: {
+            $map: {
+              input: "$weeklyData",
+              as: "week",
+              in: {
+                week: "$$week.week",
+                revenue: "$$week.revenue",
+                cost: "$$week.cost",
+                orders: "$$week.orders",
+              },
+            },
+          },
+        },
+      },
+    ]);
+
+    const result = stats.length > 0 ? stats[0] : {
+      totalRevenue: 0,
+      totalCost: 0,
+      totalProfit: 0,
+      totalOrders: 0,
+      weeklyData: [],
+    };
+
     res.json({
       success: true,
-      stats: {
-        totalRevenue,
-        totalCost,
-        totalProfit,
-        totalOrders: deliveredOrders.length,
-      },
+      stats: result,
     });
   } catch (error) {
     console.error("Lỗi khi lấy thống kê doanh thu:", error);
-    res.status(500).json({ success: false, message: "Lỗi máy chủ" });
+    res.status(500).json({ success: false, message: "Lỗi máy chủ", error: error.message });
   }
 };
-
 const getOrderCounts = async (req, res) => {
   try {
     const deliveredOrders = await orderModel.find({ status: "Delivered" });

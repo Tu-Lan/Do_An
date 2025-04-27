@@ -17,7 +17,7 @@ const orderSchema = new mongoose.Schema({
   stripeSessionId: { type: String },
   refundId: { type: String },
   refunded: { type: Boolean, default: false },
-  date: { type: Number, required: true },
+  date: { type: Number, required: true ,default: Date.now},
   cancelReason: { type: String }, // Lý do hủy đơn hàng
   deliveryFailedReason: { type: String }, // Lý do giao hàng thất bại
   internalNote: { type: String }, // Ghi chú nội bộ (cho Packing, Delivered)
