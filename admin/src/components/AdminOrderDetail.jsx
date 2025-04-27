@@ -1,4 +1,3 @@
-//// filepath: /n:/addNew/admin/src/pages/AdminOrderDetail.jsx
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import axios from "axios";
@@ -22,6 +21,10 @@ const AdminOrderDetail = ({ backend_url, token }) => {
     };
     fetchOrderDetail();
   }, [orderId, backend_url, token]);
+  const getImageUrl = (image) => {
+    if (!image) return "/fallback-image.png";
+    return image.startsWith("http") || image.startsWith("/") ? image : `/${image}`;
+  };
 
   if (!order) return <div>Đang tải...</div>;
 
@@ -33,15 +36,24 @@ const AdminOrderDetail = ({ backend_url, token }) => {
       <h3 className="text-lg font-medium mt-4 mb-2">Sản phẩm:</h3>
       {order.items.map((item, index) => (
         <div key={index} className="ml-4 mb-2">
-          <img
+          {/* <img
             src={item.image}
             alt={item.name}
             className="w-12 h-12 object-cover border border-gray-300 rounded"
+          /> */}
+          <img
+            src={getImageUrl(item.image)}
+            alt={item.name}
+            width={55}
+            className="object-cover aspect-square rounded"
+            onError={(e) => {
+              e.currentTarget.src = "/fallback-image.png";
+            }}
           />
-          <p>{item.name} - SL: {item.quantity} - Giá: {item.price}</p>
+          <p>{item.name} - SL: {item.quantity} - Giá: {item.price.toLocaleString("vi-VN")}</p>
         </div>
       ))}
-      <p className="mt-4">Tổng: {order.amount} đ</p>
+      <p className="mt-4">Tổng: {order.amount.toLocaleString("vi-VN")} đ</p>
       {order.address && (
         <div className="mt-6">
           <h4 className="text-lg font-medium">Thông tin giao hàng:</h4>

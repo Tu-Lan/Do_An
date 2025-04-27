@@ -17,7 +17,7 @@ import ListUser from "./pages/ListUser";
 import EditUser from "./components/EditUserAdmin";
 import AddUser from "./pages/AddUser";
 import StockList from "./pages/StockList";
-import AdminOrderDetail from "./components/InvoiceDetail";
+import AdminOrderDetail from "./components/AdminOrderDetail";
 import UserStats from "./pages/UserStats";
 import ProductSalesStats from "./pages/ProductSalesStats";
 import ImportList from "./components/ImportList";

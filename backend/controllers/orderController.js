@@ -13,7 +13,6 @@ const __dirname = dirname(__filename);
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
-
 const placeOrder = async (req, res) => {
   try {
     const { items, address, amount, paymentMethod } = req.body;
@@ -66,8 +65,8 @@ const placeOrder = async (req, res) => {
     }
     res.status(201).json({ success: true, message: "Đơn hàng đã được đặt thành công.", order: newOrder });
   } catch (error) {
-    console.error("Error placing order:", error);
-    res.status(500).json({ success: false, message: "Internal server error.", error: error.message });
+    console.error("Lỗi khi đặt đơn hàng:", error);
+    res.status(500).json({ success: false, message: "Lỗi máy chủ.", error: error.message });
   }
 };
 
@@ -97,7 +96,7 @@ const placeOrderStripe = async (req, res) => {
         price: product.price,
         quantity: item.quantity,
         publisher: product.publisher,
-        image: product.image,     
+        image: product.image,
       });
     }
     const totalAmountVND = amount + 1000;
@@ -130,7 +129,7 @@ const placeOrderStripe = async (req, res) => {
     line_items.push({
       price_data: {
         currency: 'vnd',
-        product_data: { name: "Delivery charges" },
+        product_data: { name: "Phí vận chuyển" },
         unit_amount: 1000,
       },
       quantity: 1,
@@ -153,23 +152,24 @@ const placeOrderStripe = async (req, res) => {
     }
     res.status(200).json({
       success: true,
-      message: "Session thanh toán được tạo.",
+      message: "Phiên thanh toán đã được tạo.",
       session_url: session.url,
     });
   } catch (error) {
-    console.error("Error processing Stripe order:", error);
-    res.status(500).json({ success: false, message: "Internal server error.", error: error.message });
+    console.error("Lỗi khi xử lý thanh toán Stripe:", error);
+    res.status(500).json({ success: false, message: "Lỗi máy chủ.", error: error.message });
   }
 };
+
 const createPaymentLink = async (req, res) => {
   try {
-    const { orderId, amount } = req.body; 
-    const session = await stripeClient.checkout.sessions.create({
+    const { orderId, amount } = req.body;
+    const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
       line_items: [
         {
           price_data: {
-            currency: 'vnd',  
+            currency: 'vnd',
             product_data: {
               name: `Đơn hàng #${orderId}`,
             },
@@ -184,30 +184,69 @@ const createPaymentLink = async (req, res) => {
     });
     res.json({ success: true, paymentLink: session.url });
   } catch (error) {
-    console.error("Error creating payment session:", error);
-    res.status(500).json({ success: false, message: "Không thể tạo thanh toán" });
+    console.error("Lỗi khi tạo phiên thanh toán:", error);
+    res.status(500).json({ success: false, message: "Không thể tạo liên kết thanh toán" });
   }
 };
-export { createPaymentLink };
+
 const getOrderDetail = async (req, res) => {
   try {
     const { orderId } = req.params;
     if (!orderId) {
       return res.status(400).json({ success: false, message: "Mã đơn hàng là bắt buộc" });
     }
-    const order = await orderModel.findById(orderId)
+    const order = await orderModel
+      .findById(orderId)
       .populate({
-        path: 'items._id', 
-        model: productModel, 
-        select: 'name description price author image category' 
-      })
+        path: 'items._id',
+        model: productModel,
+        select: 'name description price author image category',
+      });
     if (!order) {
       return res.status(404).json({ success: false, message: "Đơn hàng không tìm thấy" });
     }
-    res.json({ success: true, order });
+    const formattedOrder = {
+      _id: order._id,
+      userId: order.userId,
+      items: order.items.map((item) => ({
+        _id: item._id._id,
+        name: item._id.name,
+        description: item._id.description,
+        price: item.price,
+        author: item._id.author,
+        image: item._id.image || item.image || null,
+        category: item._id.category,
+        quantity: item.quantity,
+        publisher: item.publisher,
+      })),
+      address: order.address,
+      amount: order.amount,
+      paymentMethod: order.paymentMethod,
+      payment: order.payment,
+      date: order.date,
+      status: order.status,
+      stripeSessionId: order.stripeSessionId,
+      paymentIntentId: order.paymentIntentId,
+      cancelReason: order.cancelReason,
+      deliveryFailedReason: order.deliveryFailedReason,
+      returnReason: order.returnReason,
+      fraudReason: order.fraudReason,
+      onHoldReason: order.onHoldReason,
+      refundRequestReason: order.refundRequestReason,
+      partialDeliveryNote: order.partialDeliveryNote,
+      trackingNumber: order.trackingNumber,
+      partialRefundAmount: order.partialRefundAmount,
+      restockETA: order.restockETA,
+      contactNote: order.contactNote,
+      deliveryDate: order.deliveryDate,
+      internalNote: order.internalNote,
+      refunded: order.refunded,
+      refundId: order.refundId,
+    };
+    res.json({ success: true, order: formattedOrder });
   } catch (error) {
-    console.error("Error fetching order details:", error);
-    res.status(500).json({ success: false, message: "Internal server error" });
+    console.error("Lỗi khi lấy chi tiết đơn hàng:", error);
+    res.status(500).json({ success: false, message: "Lỗi máy chủ", error: error.message });
   }
 };
 
@@ -216,22 +255,23 @@ const allOrder = async (req, res) => {
     const orders = await orderModel.find({});
     res.json({ success: true, orders });
   } catch (error) {
-    console.log(error);
-    res.json({ success: false, message: error.message });
+    console.error("Lỗi khi lấy tất cả đơn hàng:", error);
+    res.json({ success: false, message: "Lỗi máy chủ" });
   }
-}
+};
 
 const userOrders = async (req, res) => {
   try {
     const userId = req.user.id;
-    const orders = await orderModel.find({ userId })
+    const orders = await orderModel
+      .find({ userId })
       .populate({
         path: 'items._id',
         model: productModel,
-        select: 'name price image publisher category'
+        select: 'name price image publisher category',
       })
-      .lean();  
-    const formatted = orders.map(order => ({
+      .lean();
+    const formatted = orders.map((order) => ({
       _id: order._id,
       status: order.status,
       payment: order.payment,
@@ -239,24 +279,28 @@ const userOrders = async (req, res) => {
       date: order.date,
       refunded: order.refunded || false,
       refundId: order.refundId || null,
-      items: order.items.map(item => ({
-        _id: item._id._id,         
+      cancelReason: order.cancelReason || null,
+      deliveryFailedReason: order.deliveryFailedReason || null,
+      internalNote: order.internalNote || null,
+      returnReason: order.returnReason || null,
+      items: order.items.map((item) => ({
+        _id: item._id._id,
         name: item._id.name,
-        price: item.price,          
+        price: item.price,
         quantity: item.quantity,
-        image: item._id.image,      
+        image: item._id.image || item.image || null,
         publisher: item._id.publisher,
-        category: item._id.category
+        category: item._id.category,
       })),
       amount: order.amount,
       address: order.address,
       stripeSessionId: order.stripeSessionId,
-      paymentIntentId: order.paymentIntentId
+      paymentIntentId: order.paymentIntentId,
     }));
     res.json({ success: true, orders: formatted });
   } catch (error) {
-    console.error("Error in userOrders:", error);
-    res.status(500).json({ success: false, message: error.message });
+    console.error("Lỗi khi lấy đơn hàng của người dùng:", error);
+    res.status(500).json({ success: false, message: "Lỗi máy chủ" });
   }
 };
 
@@ -285,27 +329,246 @@ const verifyStripe = async (req, res) => {
       res.json({ success: false, message: "Thanh toán không thành công, đơn hàng đã bị hủy" });
     }
   } catch (error) {
-    console.error("Error verifying Stripe payment:", error);
-    res.status(500).json({ success: false, message: "Internal server error" });
+    console.error("Lỗi khi xác minh thanh toán Stripe:", error);
+    res.status(500).json({ success: false, message: "Lỗi máy chủ" });
   }
 };
 
 const UpdateStatus = async (req, res) => {
   try {
-    const { orderId, status } = req.body;
-    await orderModel.findByIdAndUpdate(orderId, { status });
-    res.json({ success: true, message: 'Cập nhật trạng thái thành công' });
+    const {
+      orderId,
+      status,
+      internalNote,
+      cancelReason,
+      deliveryFailedReason,
+      returnReason,
+      fraudReason,
+      onHoldReason,
+      refundRequestReason,
+      partialDeliveryNote,
+      trackingNumber,
+      partialRefundAmount,
+      restockETA,
+      contactNote,
+      deliveryDate,
+    } = req.body;
+
+    if (!orderId || !status) {
+      return res.status(400).json({ success: false, message: "Mã đơn hàng và trạng thái là bắt buộc" });
+    }
+
+    const order = await orderModel.findById(orderId);
+    if (!order) {
+      return res.status(404).json({ success: false, message: "Đơn hàng không tìm thấy" });
+    }
+
+    // Kiểm tra nếu đơn hàng đã bị hủy
+    if (order.status === "Cancelled") {
+      return res.status(400).json({ success: false, message: "Không thể cập nhật trạng thái của đơn hàng đã hủy" });
+    }
+
+    switch (status) {
+      case "Cancelled":
+        if (!cancelReason) {
+          return res.status(400).json({ success: false, message: "Lý do hủy đơn hàng là bắt buộc" });
+        }
+        if (order.status !== "Order Placed" && order.status !== "Order Confirmed") {
+          return res.status(400).json({ success: false, message: "Đơn hàng không thể hủy ở giai đoạn này" });
+        }
+        order.cancelReason = cancelReason;
+        if (order.paymentMethod === "Stripe" && order.payment) {
+          const paymentIntentId = order.paymentIntentId;
+          if (!paymentIntentId) {
+            return res.status(400).json({ success: false, message: "Không tìm thấy thông tin thanh toán Stripe" });
+          }
+          const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
+          const chargeAmount = paymentIntent.amount;
+          const refundAmount = chargeAmount - 1000;
+          if (refundAmount <= 0) {
+            return res.status(400).json({ success: false, message: "Số tiền hoàn lại không hợp lệ" });
+          }
+          const refund = await stripe.refunds.create({
+            payment_intent: paymentIntentId,
+            amount: refundAmount,
+          });
+          if (refund.status === "succeeded" || refund.status === "pending") {
+            order.refunded = true;
+            order.refundId = refund.id;
+          } else {
+            return res.status(400).json({ success: false, message: `Hoàn tiền thất bại: trạng thái ${refund.status}` });
+          }
+        }
+        for (const item of order.items) {
+          const product = await productModel.findById(item.product);
+          if (product) {
+            product.quantity += item.quantity;
+            await product.save();
+          }
+        }
+        break;
+
+      case "Delivery Failed":
+        if (!deliveryFailedReason) {
+          return res.status(400).json({ success: false, message: "Lý do giao hàng thất bại là bắt buộc" });
+        }
+        if (order.status !== "Out for Delivery") {
+          return res.status(400).json({ success: false, message: "Đơn hàng không ở trạng thái đang giao" });
+        }
+        order.deliveryFailedReason = deliveryFailedReason;
+        break;
+
+      case "Returned":
+        if (!returnReason) {
+          return res.status(400).json({ success: false, message: "Lý do trả hàng là bắt buộc" });
+        }
+        order.returnReason = returnReason;
+        if (order.paymentMethod === "Stripe" && order.payment && !order.refunded) {
+          const paymentIntentId = order.paymentIntentId;
+          if (!paymentIntentId) {
+            return res.status(400).json({ success: false, message: "Không tìm thấy thông tin thanh toán Stripe" });
+          }
+          const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
+          const chargeAmount = paymentIntent.amount;
+          const refundAmount = chargeAmount - 1000;
+          if (refundAmount <= 0) {
+            return res.status(400).json({ success: false, message: "Số tiền hoàn lại không hợp lệ" });
+          }
+          const refund = await stripe.refunds.create({
+            payment_intent: paymentIntentId,
+            amount: refundAmount,
+          });
+          if (refund.status === "succeeded" || refund.status === "pending") {
+            order.refunded = true;
+            order.refundId = refund.id;
+          } else {
+            return res.status(400).json({ success: false, message: `Hoàn tiền thất bại: trạng thái ${refund.status}` });
+          }
+        }
+        for (const item of order.items) {
+          const product = await productModel.findById(item.product);
+          if (product) {
+            product.quantity += item.quantity;
+            await product.save();
+          }
+        }
+        break;
+
+      case "Fraud Suspected":
+        if (!fraudReason) {
+          return res.status(400).json({ success: false, message: "Lý do nghi ngờ gian lận là bắt buộc" });
+        }
+        order.fraudReason = fraudReason;
+        break;
+
+      case "On Hold":
+        if (!onHoldReason) {
+          return res.status(400).json({ success: false, message: "Lý do tạm giữ đơn hàng là bắt buộc" });
+        }
+        order.onHoldReason = onHoldReason;
+        break;
+
+      case "Refund Requested":
+        if (!refundRequestReason) {
+          return res.status(400).json({ success: false, message: "Lý do yêu cầu hoàn tiền là bắt buộc" });
+        }
+        order.refundRequestReason = refundRequestReason;
+        break;
+
+      case "Partially Delivered":
+        if (!partialDeliveryNote) {
+          return res.status(400).json({ success: false, message: "Ghi chú giao hàng một phần là bắt buộc" });
+        }
+        order.partialDeliveryNote = partialDeliveryNote;
+        break;
+
+      case "Out for Delivery":
+        if (!trackingNumber) {
+          return res.status(400).json({ success: false, message: "Mã vận đơn là bắt buộc" });
+        }
+        order.trackingNumber = trackingNumber;
+        break;
+
+      case "Partially Refunded":
+        if (!partialRefundAmount || partialRefundAmount <= 0) {
+          return res.status(400).json({ success: false, message: "Số tiền hoàn lại một phần không hợp lệ" });
+        }
+        if (order.paymentMethod === "Stripe" && order.payment && !order.refunded) {
+          const paymentIntentId = order.paymentIntentId;
+          if (!paymentIntentId) {
+            return res.status(400).json({ success: false, message: "Không tìm thấy thông tin thanh toán Stripe" });
+          }
+          const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
+          const chargeAmount = paymentIntent.amount;
+          if (partialRefundAmount > chargeAmount - 1000) {
+            return res.status(400).json({
+              success: false,
+              message: `Số tiền hoàn lại (₫${partialRefundAmount}) lớn hơn số tiền thanh toán khả dụng (₫${chargeAmount - 1000})`,
+            });
+          }
+          const refund = await stripe.refunds.create({
+            payment_intent: paymentIntentId,
+            amount: partialRefundAmount,
+          });
+          if (refund.status === "succeeded" || refund.status === "pending") {
+            order.partialRefundAmount = partialRefundAmount;
+            order.refunded = true;
+            order.refundId = refund.id;
+          } else {
+            return res.status(400).json({ success: false, message: `Hoàn tiền thất bại: trạng thái ${refund.status}` });
+          }
+        }
+        break;
+
+      case "Awaiting Restock":
+        if (restockETA) {
+          order.restockETA = restockETA;
+        }
+        break;
+
+      case "Customer Contacted":
+        if (contactNote) {
+          order.contactNote = contactNote;
+        }
+        break;
+
+      case "Delivered":
+        if (deliveryDate) {
+          order.deliveryDate = deliveryDate;
+        }
+        if (internalNote) {
+          order.internalNote = internalNote;
+        }
+        break;
+
+      case "Packing":
+        if (internalNote) {
+          order.internalNote = internalNote;
+        }
+        break;
+
+      default:
+        break;
+    }
+
+    order.status = status;
+    await order.save();
+
+    res.json({ success: true, message: "Cập nhật trạng thái thành công" });
   } catch (error) {
-    console.log(error);
-    res.json({ success: false, message: error.message });
+    console.error("Lỗi khi cập nhật trạng thái:", error);
+    res.status(500).json({ success: false, message: "Lỗi máy chủ" });
   }
-}
+};
 
 const cancelOrder = async (req, res) => {
   try {
-    const { orderId } = req.body;
+    const { orderId, reason } = req.body;
     if (!orderId) {
-      return res.status(400).json({ success: false, message: "ID đơn hàng là bắt buộc" });
+      return res.status(400).json({ success: false, message: "Mã đơn hàng là bắt buộc" });
+    }
+    if (!reason) {
+      return res.status(400).json({ success: false, message: "Lý do hủy đơn hàng là bắt buộc" });
     }
     const order = await orderModel.findById(orderId);
     if (!order) {
@@ -324,7 +587,18 @@ const cancelOrder = async (req, res) => {
         return res.status(400).json({ success: false, message: "Không tìm thấy thông tin thanh toán Stripe" });
       }
       try {
-        const refundAmount = order.amount - 1000; 
+        const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
+        const chargeAmount = paymentIntent.amount;
+        const refundAmount = chargeAmount - 1000;
+        if (refundAmount <= 0) {
+          return res.status(400).json({ success: false, message: "Số tiền hoàn lại không hợp lệ" });
+        }
+        if (refundAmount > chargeAmount) {
+          return res.status(400).json({
+            success: false,
+            message: `Số tiền hoàn lại (₫${refundAmount}) lớn hơn số tiền thanh toán (₫${chargeAmount})`,
+          });
+        }
         const refund = await stripe.refunds.create({
           payment_intent: paymentIntentId,
           amount: refundAmount,
@@ -337,10 +611,11 @@ const cancelOrder = async (req, res) => {
         }
       } catch (refundError) {
         console.error("Lỗi khi hoàn tiền qua Stripe:", refundError);
-        return res.status(500).json({ success: false, message: "Không thể hoàn tiền qua Stripe." });
+        return res.status(500).json({ success: false, message: `Không thể hoàn tiền qua Stripe: ${refundError.message}` });
       }
     }
     order.status = "Cancelled";
+    order.cancelReason = reason;
     if (refundId) {
       order.refunded = true;
       order.refundId = refundId;
@@ -355,23 +630,51 @@ const cancelOrder = async (req, res) => {
     }
     res.json({ success: true, message: "Hủy đơn hàng thành công và hoàn tiền (nếu có)." });
   } catch (error) {
-    console.error("Error cancelling order:", error);
-    res.status(500).json({ success: false, message: "Internal server error" });
+    console.error("Lỗi khi hủy đơn hàng:", error);
+    res.status(500).json({ success: false, message: "Lỗi máy chủ" });
   }
 };
+
+const failDelivery = async (req, res) => {
+  try {
+    const { orderId, reason } = req.body;
+    if (!orderId) {
+      return res.status(400).json({ success: false, message: "Mã đơn hàng là bắt buộc" });
+    }
+    if (!reason) {
+      return res.status(400).json({ success: false, message: "Lý do giao hàng thất bại là bắt buộc" });
+    }
+    const order = await orderModel.findById(orderId);
+    if (!order) {
+      return res.status(404).json({ success: false, message: "Đơn hàng không tìm thấy" });
+    }
+    if (order.status !== "Out for Delivery") {
+      return res.status(400).json({ success: false, message: "Đơn hàng không ở trạng thái đang giao" });
+    }
+    order.status = "Delivery Failed";
+    order.deliveryFailedReason = reason;
+    await order.save();
+    res.json({ success: true, message: "Cập nhật trạng thái giao hàng thất bại thành công" });
+  } catch (error) {
+    console.error("Lỗi khi đánh dấu giao hàng thất bại:", error);
+    res.status(500).json({ success: false, message: "Lỗi máy chủ" });
+  }
+};
+
 const getOrderStats = async (req, res) => {
   try {
     const stats = await orderModel.find({});
     res.json({ success: true, stats });
   } catch (error) {
-    console.error(error);
-    res.json({ success: false, message: error.message });
+    console.error("Lỗi khi lấy thống kê đơn hàng:", error);
+    res.json({ success: false, message: "Lỗi máy chủ" });
   }
 };
+
 const getRevenueStats = async (req, res) => {
   try {
     const deliveredOrders = await orderModel
-      .find({ status: "delivery" })
+      .find({ status: "Delivered" })
       .populate("items.product");
     let totalRevenue = 0;
     let totalProfit = 0;
@@ -379,7 +682,7 @@ const getRevenueStats = async (req, res) => {
     deliveredOrders.forEach((order) => {
       order.items.forEach((item) => {
         const product = item.product;
-        if (!product) return; 
+        if (!product) return;
         const quantity = item.quantity;
         const purchasePrice = product.price || 0;
         const sellingPrice = item.price || product.salePrice || 0;
@@ -402,21 +705,22 @@ const getRevenueStats = async (req, res) => {
     });
   } catch (error) {
     console.error("Lỗi khi lấy thống kê doanh thu:", error);
-    res.status(500).json({ success: false, message: error.message });
+    res.status(500).json({ success: false, message: "Lỗi máy chủ" });
   }
 };
 
 const getOrderCounts = async (req, res) => {
   try {
-    const deliveredOrders = await orderModel.find({ status: "delivery" });
+    const deliveredOrders = await orderModel.find({ status: "Delivered" });
     const totalOrders = deliveredOrders.length;
     const totalProducts = deliveredOrders.reduce((acc, order) => {
-      const productQty = order.products.reduce((sum, p) => sum + p.quantity, 0);
+      const productQty = order.items.reduce((sum, p) => sum + p.quantity, 0);
       return acc + productQty;
     }, 0);
     res.json({ success: true, totalOrders, totalProducts });
-  } catch (err) {
-    res.json({ success: false, message: err.message });
+  } catch (error) {
+    console.error("Lỗi khi lấy số lượng đơn hàng:", error);
+    res.json({ success: false, message: "Lỗi máy chủ" });
   }
 };
 
@@ -477,17 +781,31 @@ const generateInvoice = async (req, res) => {
     stream.on('finish', () => {
       res.download(filePath, fileName, (err) => {
         if (err) {
-          console.error(err);
-          res.status(500).json({ success: false, message: "Hóa đơn lỗi" });
+          console.error("Lỗi khi tải hóa đơn:", err);
+          res.status(500).json({ success: false, message: "Lỗi khi tạo hóa đơn" });
         }
         fs.unlinkSync(filePath);
       });
     });
   } catch (error) {
-    console.error("Error generating invoice:", error);
-    res.status(500).json({ success: false, message: "Internal server error" });
+    console.error("Lỗi khi tạo hóa đơn:", error);
+    res.status(500).json({ success: false, message: "Lỗi máy chủ" });
   }
 };
 
-
-export { placeOrder, getOrderDetail, placeOrderStripe, allOrder, userOrders, verifyStripe, UpdateStatus, getOrderStats, generateInvoice, cancelOrder, getRevenueStats, getOrderCounts }
+export {
+  placeOrder,
+  getOrderDetail,
+  placeOrderStripe,
+  allOrder,
+  userOrders,
+  verifyStripe,
+  failDelivery,
+  UpdateStatus,
+  getOrderStats,
+  generateInvoice,
+  cancelOrder,
+  getRevenueStats,
+  getOrderCounts,
+  createPaymentLink,
+};
