@@ -14,7 +14,7 @@ const Header = () => {
   const [active, setActive] = useState(false);
   const [menuOpened, setMenuOpened] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [isContactOpen, setIsContactOpen] = useState(false); // State để quản lý popup liên hệ
+  const [isContactOpen, setIsContactOpen] = useState(false); 
   const menuRef = useRef(null);
 
   const toggleMenu = () => {
@@ -22,7 +22,7 @@ const Header = () => {
   };
 
   const toggleContact = () => {
-    setIsContactOpen((prev) => !prev); // Toggle trạng thái popup liên hệ
+    setIsContactOpen((prev) => !prev); 
   };
 
   const logout = () => {

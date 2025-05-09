@@ -290,16 +290,32 @@ const addAddress = async (req, res) => {
   const address = req.body;
 
   try {
-    const user = await userModel.findByIdAndUpdate(
-      userId,
-      { $push: { addresses: address } },
-      { new: true }
-    );
+    const user = await userModel.findById(userId);
+    if (!user) {
+      return res.status(404).json({ success: false, message: "Không tìm thấy người dùng." });
+    }
+
+    if (user.addresses.length === 0) {
+      address.isDefault = true;
+    }
+
+    if (address.isDefault) {
+      user.addresses = user.addresses.map(addr => ({
+        ...addr.toObject(),
+        isDefault: false,
+      }));
+    }
+
+    user.addresses.push(address);
+    await user.save();
+
     res.status(200).json({ success: true, addresses: user.addresses });
   } catch (error) {
+    console.error("Lỗi khi thêm địa chỉ:", error);
     res.status(500).json({ success: false, message: "Lỗi khi thêm địa chỉ." });
   }
 };
+
 
 const updateAddress = async (req, res) => {
   const userId = req.user.id;
@@ -399,6 +415,40 @@ const getRegisteredUsers = async (req, res) => {
     res.status(500).json({ success: false, message: "Internal server error." });
   }
 };
+const setDefaultAddress = async (req, res) => {
+  const userId = req.user.id;
+  const { addressId } = req.params;
+
+  try {
+    const user = await userModel.findById(userId);
+    if (!user) {
+      return res.status(404).json({ success: false, message: "Không tìm thấy người dùng." });
+    }
+
+    let found = false;
+
+    // Duyệt tất cả địa chỉ, cập nhật lại isDefault
+    user.addresses = user.addresses.map(addr => {
+      if (addr._id.toString() === addressId) {
+        found = true;
+        return { ...addr.toObject(), isDefault: true };
+      }
+      return { ...addr.toObject(), isDefault: false };
+    });
+
+    if (!found) {
+      return res.status(404).json({ success: false, message: "Không tìm thấy địa chỉ để đặt mặc định." });
+    }
+
+    await user.save();
+
+    res.status(200).json({ success: true, message: "Đã đặt địa chỉ mặc định thành công.", addresses: user.addresses });
+  } catch (error) {
+    console.error("Lỗi khi đặt địa chỉ mặc định:", error);
+    res.status(500).json({ success: false, message: "Lỗi máy chủ." });
+  }
+};
+
 
 export { adminUpdateUser, deleteUser, handleAdminLogin, handleUserRegister, handleUserLogin, getAllUsers, getUserById, getCurrentUserProfile, 
   updateCurrentUserProfile, addAddress,
@@ -407,4 +457,5 @@ export { adminUpdateUser, deleteUser, handleAdminLogin, handleUserRegister, hand
   getAddresses,
   getUserStats,
   getRegisteredUsers,
+  setDefaultAddress
 };

@@ -17,11 +17,11 @@ import ListUser from "./pages/ListUser";
 import EditUser from "./components/EditUserAdmin";
 import AddUser from "./pages/AddUser";
 import StockList from "./pages/StockList";
-import AdminOrderDetail from "./components/InvoiceDetail";
+import AdminOrderDetail from "./components/AdminOrderDetail";
 import UserStats from "./pages/UserStats";
 import ProductSalesStats from "./pages/ProductSalesStats";
 import ImportList from "./components/ImportList";
-
+import Revenue from "./pages/Revenue";
 export const backend_url = import.meta.env.VITE_BACKEND_URL;
 export const currency = "đ";
 
@@ -56,6 +56,7 @@ const App = () => {
                 <Route path="/list-import" element={<ImportList token={token} />} />
                 <Route path="/list-category" element={<ListCategory token={token} />} />
                 <Route path="/orders" element={<Orders token={token} />} />
+                <Route path="/revenue" element={<Revenue token={token} />} />
                 <Route path="/admin/order/:orderId" element={<AdminOrderDetail backend_url={backend_url} token={token} />} />
                 <Route path="/edit-product/:id" element={<EditProduct token={token} />} />
                 <Route path="/edit-category/:id" element={<EditCategory token={token} />} />

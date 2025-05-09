@@ -17,8 +17,10 @@ const ProductSalesStats = ({ token }) => {
         });
 
         if (response.data.success) {
-          setData(response.data.stats);
-          setTotalSold(response.data.totalProductsSold); 
+          // Sắp xếp dữ liệu theo totalSold giảm dần
+          const sortedData = response.data.stats.sort((a, b) => b.totalSold - a.totalSold);
+          setData(sortedData);
+          setTotalSold(response.data.totalProductsSold);
         } else {
           toast.error(response.data.message);
         }
@@ -52,15 +54,38 @@ const ProductSalesStats = ({ token }) => {
             <table className="min-w-full bg-white border rounded-lg">
               <thead>
                 <tr className="bg-gray-200">
+                  <th className="py-3 px-6 text-left">Xếp hạng</th>
                   <th className="py-3 px-6 text-left">Sản phẩm</th>
                   <th className="py-3 px-6 text-left">Số lượng bán ra</th>
                 </tr>
               </thead>
               <tbody>
-                {data.map((item) => (
+                {data.map((item, index) => (
                   <tr key={item._id} className="border-b hover:bg-gray-100">
+                    <td className="py-2 px-6">
+                      {index === 0 && (
+                        <span className="inline-block px-2 py-1 text-xs font-semibold text-white bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full animate-sparkle">
+                          Top 1 - Bán chạy
+                        </span>
+                      )}
+                      {index === 1 && (
+                        <span className="inline-block px-2 py-1 text-xs font-semibold text-white bg-blue-500 rounded-full">
+                          Top 2
+                        </span>
+                      )}
+                      {index === 2 && (
+                        <span className="inline-block px-2 py-1 text-xs font-semibold text-white bg-green-500 rounded-full">
+                          Top 3
+                        </span>
+                      )}
+                      {index > 2 && <span>{index + 1}</span>}
+                    </td>
                     <td className="py-2 px-6 flex items-center gap-4">
-                      <img src={item.image} alt={item.name} className="w-12 h-12 object-cover rounded-md" />
+                      <img
+                        src={item.image}
+                        alt={item.name}
+                        className="w-12 h-12 object-cover rounded-md"
+                      />
                       <span>{item.name}</span>
                     </td>
                     <td className="py-2 px-6">{item.totalSold}</td>

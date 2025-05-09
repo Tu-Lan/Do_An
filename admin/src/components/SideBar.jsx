@@ -132,9 +132,10 @@ const SideBar = ({ setToken }) => {
                 </div>
                 {dropdownState.thongKe && (
                   <ul className="pl-8">
-                    <li>{renderNavLink('/order-stats', <ImStatsDots size={20} />, 'Thống kê đơn hàng')}</li>
+                    <li>{renderNavLink('/revenue', <ImStatsDots size={20} />, 'Doanh Thu')}</li>
+                    {/* <li>{renderNavLink('/order-stats', <ImStatsDots size={20} />, 'Thống kê đơn hàng')}</li> */}
                     {/* <li>{renderNavLink('/user-stats', <IoIosListBox size={20} />, 'Thống kê người dùng')}</li> */}
-                    <li>{renderNavLink('/product-stats', <ImStatsDots size={20} />, 'Thống kê sản phẩm')}</li>
+                    <li>{renderNavLink('/product-stats', <ImStatsDots size={20} />, 'Top sản phẩm bán chạy')}</li>
                   </ul>
                 )}
               </li>

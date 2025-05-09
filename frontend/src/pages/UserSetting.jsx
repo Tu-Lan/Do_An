@@ -153,10 +153,17 @@ const EditUser = () => {
 
 const AddressManager = () => {
   const { token, backend_url } = useContext(ShopContext);
-
   const [addresses, setAddresses] = useState([]);
   const [formData, setFormData] = useState({
-    firstName: "", lastName: "", phone: "", street: "", city: "", state: "", zipcode: "", country: "",
+    firstName: "",
+    lastName: "",
+    phone: "",
+    street: "",
+    city: "",
+    state: "",
+    zipcode: "",
+    country: "",
+    isDefault: false,
   });
   const [editingAddressId, setEditingAddressId] = useState(null);
   const [mapCenter, setMapCenter] = useState({ lat: 21.0285, lon: 105.8542 });
@@ -203,6 +210,7 @@ const AddressManager = () => {
               state: address.countrySubdivision || "",
               zipcode: address.postalCode || "",
               country: address.country || "",
+              isDefault: address.isDefault || false
             }));
             setSearchInput(address.freeformAddress || "");
           }
@@ -245,6 +253,13 @@ const AddressManager = () => {
       toast.error("Bạn cần đăng nhập để thực hiện thao tác này.");
       return;
     }
+    if (formData.isDefault) {
+      const updatedAddresses = addresses.map((address) =>
+        address._id !== editingAddressId ? { ...address, isDefault: false } : address
+      );
+      setAddresses(updatedAddresses); 
+    }
+
     try {
       const url = editingAddressId
         ? `${backend_url}/api/user/address/${editingAddressId}`
@@ -258,9 +273,8 @@ const AddressManager = () => {
       });
       toast.success(editingAddressId ? "Cập nhật địa chỉ thành công!" : "Thêm địa chỉ thành công!");
       setAddresses(response.data.addresses);
-      setFormData({ firstName: "", lastName: "", phone: "", street: "", city: "", state: "", zipcode: "", country: "" });
+      setFormData({ firstName: "", lastName: "", phone: "", street: "", city: "", state: "", zipcode: "", country: "", isDefault: false });
       setEditingAddressId(null);
-    // eslint-disable-next-line no-unused-vars
     } catch (error) {
       toast.error("Đã xảy ra lỗi khi lưu địa chỉ.");
     }
@@ -271,7 +285,7 @@ const AddressManager = () => {
     setFormData({
       firstName: address.firstName, lastName: address.lastName, phone: address.phone,
       street: address.street, city: address.city, state: address.state,
-      zipcode: address.zipcode, country: address.country,
+      zipcode: address.zipcode, country: address.country, isDefault: address.isDefault
     });
   };
 
@@ -283,12 +297,12 @@ const AddressManager = () => {
       );
       toast.success("Địa chỉ đã được xóa.");
       setAddresses(response.data.addresses);
-    // eslint-disable-next-line no-unused-vars
+      // eslint-disable-next-line no-unused-vars
     } catch (error) {
       toast.error("Không thể xóa địa chỉ.");
     }
   };
-
+  const sortedAddresses = [...addresses].sort((a, b) => (a.isDefault ? -1 : 1));
   return (
     <div className="bg-white rounded-xl shadow-xl p-6">
       <h2 className="text-3xl font-bold text-gray-800 mb-8">Quản Lý Địa Chỉ</h2>
@@ -359,6 +373,19 @@ const AddressManager = () => {
           <div ref={mapElement} className="h-80 w-full rounded-lg border border-gray-300 shadow-md"></div>
           <p className="text-gray-600 text-sm mt-2">Địa chỉ: {searchInput || "Di chuyển bản đồ để chọn địa chỉ"}</p>
         </div>
+        <div className="flex items-center space-x-2">
+          <input
+            type="checkbox"
+            name="isDefault"
+            checked={formData.isDefault}
+            onChange={(e) => setFormData((prev) => ({
+              ...prev, isDefault: e.target.checked
+            }))}
+            className="h-5 w-5 text-blue-600 border-gray-300 rounded"
+          />
+          <label className="text-gray-700">Đặt làm địa chỉ mặc định</label>
+        </div>
+
         <button
           type="submit"
           className="w-full bg-blue-600 text-white py-3 px-6 rounded-lg hover:bg-blue-700 focus:ring-4 focus:ring-blue-200 transition-all duration-200 font-medium text-lg"
@@ -368,15 +395,18 @@ const AddressManager = () => {
       </form>
       <div className="mt-12">
         <h3 className="text-2xl font-semibold text-gray-800 mb-6">Danh Sách Địa Chỉ</h3>
-        {addresses.length === 0 ? (
+        {sortedAddresses.length === 0 ? (
           <p className="text-gray-500 text-center py-8">Không có địa chỉ nào được lưu.</p>
         ) : (
           <ul className="space-y-4">
-            {addresses.map((address) => (
-              <li key={address._id} className="bg-gray-50 rounded-lg shadow-md p-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            {sortedAddresses.map((address) => (
+              <li key={address._id} className="rounded-lg shadow-md p-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <p className="text-gray-700">
                   <span className="font-medium">{address.firstName} {address.lastName}</span> -
                   {address.street}, {address.city}, {address.state}, {address.zipcode}, {address.country}
+                  {address.isDefault && (
+                    <span className="text-green-500 ml-2 text-sm font-semibold">Mặc định</span>
+                  )}
                 </p>
                 <div className="flex space-x-3 w-full sm:w-auto">
                   <button
@@ -417,8 +447,8 @@ const UserSettings = () => {
           <button
             onClick={() => setActiveTab("edit-user")}
             className={`text-lg font-medium py-2 px-4 rounded-lg transition-all duration-200 ${activeTab === "edit-user"
-                ? "bg-blue-600 text-white"
-                : "text-gray-900 hover:bg-gray-100"
+              ? "bg-blue-600 text-white"
+              : "text-gray-900 hover:bg-gray-100"
               }`}
           >
             Thông tin người dùng
@@ -426,8 +456,8 @@ const UserSettings = () => {
           <button
             onClick={() => setActiveTab("address")}
             className={`text-lg font-medium py-2 px-4 rounded-lg transition-all duration-200 ${activeTab === "address"
-                ? "bg-blue-600 text-white"
-                : "text-gray-900 hover:bg-gray-100"
+              ? "bg-blue-600 text-white"
+              : "text-gray-900 hover:bg-gray-100"
               }`}
           >
             Địa chỉ giao hàng

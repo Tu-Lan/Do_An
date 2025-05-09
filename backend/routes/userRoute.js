@@ -14,7 +14,8 @@ import {
   getAddresses,
   removeAddress,
   getUserStats,
-  getRegisteredUsers
+  getRegisteredUsers,
+  setDefaultAddress
 } from '../controllers/userController.js';
 
 import authUser from '../middleware/auth.js';
@@ -45,6 +46,7 @@ userRouter.get("/addresses", authUser, getAddresses);
 userRouter.post("/address", authUser, addAddress);
 
 userRouter.put("/address/:addressId", authUser, updateAddress);
+userRouter.put('/address/default/:addressId', authUser, setDefaultAddress);
 
 userRouter.delete("/address/:addressId", authUser, removeAddress);
 

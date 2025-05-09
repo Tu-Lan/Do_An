@@ -6,6 +6,10 @@ import { ShopContext } from "../context/ShopContext";
 import axios from "axios";
 import { toast } from "react-toastify";
 import Select from "react-select";
+import Modal from "react-modal";
+
+// Set app element for accessibility
+Modal.setAppElement('#root');
 
 const PlaceOrder = () => {
   const {
@@ -19,7 +23,7 @@ const PlaceOrder = () => {
     delivery_charges,
   } = useContext(ShopContext);
 
-  const [method, setMethod] = useState("cod"); 
+  const [method, setMethod] = useState("cod");
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
@@ -31,8 +35,11 @@ const PlaceOrder = () => {
     phone: "",
   });
 
-  const [addresses, setAddresses] = useState([]); 
+  const [addresses, setAddresses] = useState([]);
   const [selectedAddress, setSelectedAddress] = useState(null);
+
+  // Modal state for showing address selection
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   useEffect(() => {
     if (!token) {
@@ -43,7 +50,23 @@ const PlaceOrder = () => {
         headers: { Authorization: `Bearer ${token}` },
       })
         .then(response => {
-          setAddresses(response.data.addresses); 
+          setAddresses(response.data.addresses);
+
+          // Tự động chọn địa chỉ mặc định nếu có
+          const defaultAddress = response.data.addresses.find(address => address.isDefault);
+          if (defaultAddress) {
+            setSelectedAddress(defaultAddress);
+            setFormData({
+              firstName: defaultAddress.firstName,
+              lastName: defaultAddress.lastName,
+              street: defaultAddress.street,
+              city: defaultAddress.city,
+              state: defaultAddress.state,
+              zipcode: defaultAddress.zipcode,
+              country: defaultAddress.country,
+              phone: defaultAddress.phone,
+            });
+          }
         })
         .catch(error => {
           console.error("Lỗi khi lấy địa chỉ:", error);
@@ -53,7 +76,7 @@ const PlaceOrder = () => {
 
   const handleAddressSelect = (selectedOption) => {
     if (selectedOption) {
-      setSelectedAddress(selectedOption); 
+      setSelectedAddress(selectedOption);
       setFormData({
         firstName: selectedOption.firstName,
         lastName: selectedOption.lastName,
@@ -65,6 +88,15 @@ const PlaceOrder = () => {
         phone: selectedOption.phone,
       });
     }
+    setIsModalOpen(false); // Close modal after selection
+  };
+
+  const openModal = () => {
+    setIsModalOpen(true); // Open modal when button is clicked
+  };
+
+  const closeModal = () => {
+    setIsModalOpen(false); // Close modal
   };
 
   const onChangeHandler = (e) => {
@@ -143,15 +175,28 @@ const PlaceOrder = () => {
           <div className="flex flex-1 flex-col gap-3 text-[95%]">
             <Title title1={"Địa chỉ"} title2={"nhận hàng"} title1Styles={"h3"} />
 
-            <Select
-              options={addresses.map((address) => ({
-                label: `${address.firstName} ${address.lastName} - ${address.street}`,
-                value: address,
-              }))}
-              onChange={(option) => handleAddressSelect(option.value)}
-              placeholder="Chọn địa chỉ nhận hàng"
-              isClearable
-            />
+            {/* Hiển thị thông tin địa chỉ mặc định nếu có */}
+            {selectedAddress ? (
+              <div className="mb-4">
+                <p className="font-semibold">Địa chỉ nhận hàng:</p>
+                <p>{`${selectedAddress.firstName} ${selectedAddress.lastName}`}</p>
+                <p>{selectedAddress.street}</p>
+                <p>{selectedAddress.city}, {selectedAddress.state} {selectedAddress.zipcode}</p>
+                <p>{selectedAddress.country}</p>
+                <p>{selectedAddress.phone}</p>
+              </div>
+            ) : (
+              <p>Không có địa chỉ mặc định.</p>
+            )}
+
+            {/* Nút thay đổi địa chỉ */}
+            <button
+              type="button"
+              onClick={openModal}
+              className="btn-secondary px-6 py-3 text-white bg-primary rounded-md hover:bg-primary-dark transition"
+            >
+              Thay đổi địa chỉ
+            </button>
 
             <input
               onChange={onChangeHandler}
@@ -207,6 +252,43 @@ const PlaceOrder = () => {
           </div>
         </div>
       </form>
+
+      {/* Modal for address selection */}
+      <Modal
+        isOpen={isModalOpen}
+        onRequestClose={closeModal}
+        contentLabel="Select Address"
+        className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center"
+        overlayClassName="fixed inset-0 bg-black bg-opacity-50"
+      >
+        <div className="bg-white p-6 rounded-lg w-11/12 sm:w-96">
+          <h2 className="text-xl font-semibold mb-4">Chọn địa chỉ</h2>
+          <Select
+            options={addresses.map((address) => ({
+              label: `${address.firstName} ${address.lastName} - ${address.street}`,
+              value: address,
+            }))}
+            onChange={(option) => handleAddressSelect(option.value)}
+            placeholder="Chọn địa chỉ nhận hàng"
+            isClearable
+          />
+          <div className="mt-4 flex justify-between">
+            <button
+              onClick={closeModal}
+              className="btn-secondary px-6 py-2 text-white bg-secondary rounded-md hover:bg-secondary-dark transition"
+            >
+              Đóng
+            </button>
+            <button
+              onClick={closeModal}
+              className="btn-secondary px-6 py-2 text-white bg-primary rounded-md hover:bg-primary-dark transition"
+            >
+              Chọn
+            </button>
+          </div>
+        </div>
+      </Modal>
+
       <Footer />
     </section>
   );
