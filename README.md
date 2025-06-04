@@ -33,11 +33,6 @@ Here's the revised "Công nghệ sử dụng" section with icons:
 - <img src="https://git-scm.com/favicon.ico" width="20" height="20"/> **Git** - Quản lý phiên bản
 - <img src="https://nodemon.io/favicon.ico" width="20" height="20"/> **Nodemon** - Tự động reload server
 
-Note: Để hiển thị icon đúng cách, bạn cần:
-1. Thêm CDN hoặc tự host các file icon
-2. Đảm bảo đường dẫn hình ảnh chính xác
-3. Có thể thay thế bằng emoji nếu không muốn dùng hình ảnh
-
 ## ⚙️ Các chức năng chính
 
 ### 👨‍💼 Cho khách hàng
