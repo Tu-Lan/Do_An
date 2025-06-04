@@ -6,22 +6,37 @@ Hệ thống bán sách online cho **Nhà Sách Tri Thức** là giải pháp th
 
 Here's the revised "Công nghệ sử dụng" section with icons:
 
+Here's the revised "Công nghệ sử dụng" section with icons:
+
 ## 🛠 Công nghệ sử dụng
 
 ### 🌐 Frontend
-- ⚛️ **ReactJS** - Thư viện JavaScript xây dựng giao diện
-- 🔄 **Redux** - Quản lý state
-- 🎨 **Tailwind CSS** - Framework CSS
-- 📡 **Axios** - Xử lý HTTP requests
-- 🛣️ **React Router** - Điều hướng ứng dụng
+- <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/react/react-original.svg" width="20" height="20"/> **ReactJS** - Thư viện JavaScript xây dựng giao diện
+- <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/redux/redux-original.svg" width="20" height="20"/> **Redux** - Quản lý state
+- <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/tailwindcss/tailwindcss-plain.svg" width="20" height="20"/> **Tailwind CSS** - Framework CSS
+- <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/axios/axios-original.svg" width="20" height="20"/> **Axios** - Xử lý HTTP requests
+- <img src="https://reactrouter.com/favicon.ico" width="20" height="20"/> **React Router** - Điều hướng ứng dụng
 
 ### ⚙️ Backend
-- 🟢 **Node.js** - Môi trường thực thi
-- 🚀 **Express.js** - Framework API
-- 🍃 **MongoDB** - Cơ sở dữ liệu
-- 🦊 **Mongoose** - ODM cho MongoDB
-- 🔐 **JWT** - Xác thực người dùng
-- 📤 **Multer** - Xử lý upload file
+- <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/nodejs/nodejs-original.svg" width="20" height="20"/> **Node.js** - Môi trường thực thi
+- <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/express/express-original.svg" width="20" height="20"/> **Express.js** - Framework API
+- <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/mongodb/mongodb-original.svg" width="20" height="20"/> **MongoDB** - Cơ sở dữ liệu
+- <img src="https://mongoosejs.com/docs/images/favicon.ico" width="20" height="20"/> **Mongoose** - ODM cho MongoDB
+- <img src="https://jwt.io/img/favicon.ico" width="20" height="20"/> **JWT** - Xác thực người dùng
+- <img src="https://github.com/expressjs/multer/blob/master/logo.png?raw=true" width="20" height="20"/> **Multer** - Xử lý upload file
+
+### 🛡️ Bảo mật
+- <img src="https://stripe.com/favicon.ico" width="20" height="20"/> **Stripe** - Thanh toán an toàn
+- <img src="https://www.cloudinary.com/favicon.ico" width="20" height="20"/> **Cloudinary** - Lưu trữ hình ảnh
+
+### 🚀 Tiện ích
+- <img src="https://git-scm.com/favicon.ico" width="20" height="20"/> **Git** - Quản lý phiên bản
+- <img src="https://nodemon.io/favicon.ico" width="20" height="20"/> **Nodemon** - Tự động reload server
+
+Note: Để hiển thị icon đúng cách, bạn cần:
+1. Thêm CDN hoặc tự host các file icon
+2. Đảm bảo đường dẫn hình ảnh chính xác
+3. Có thể thay thế bằng emoji nếu không muốn dùng hình ảnh
 
 ## ⚙️ Các chức năng chính
 
